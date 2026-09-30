@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDF1F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121A26" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lemma">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Lemma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#EDF1F4; --grid:rgba(27,42,74,.055); --ink:#1B2A4A; --soft:#5A6782; --card:#FFFFFF;
+  --line:#CBD4DE; --red:#D2504A; --blue:#C9DAEC; --hi:#F2E15B; --good:#2F7A57; --again:#B3392F;
+  --chip:#E1E8EF;
+  --ui:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"STIX Two Text","STIX Two","Cambria","Times New Roman",serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#121A26; --grid:rgba(228,234,242,.035); --ink:#E4EAF2; --soft:#9AA8BC; --card:#1B2535;
+    --line:#2B374A; --red:#C9544E; --blue:#26344A; --hi:#D9C645; --good:#5DBB8B; --again:#E0766C;
+    --chip:#223045; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121A26; --grid:rgba(228,234,242,.035); --ink:#E4EAF2; --soft:#9AA8BC; --card:#1B2535;
+  --line:#2B374A; --red:#C9544E; --blue:#26344A; --hi:#D9C645; --good:#5DBB8B; --again:#E0766C;
+  --chip:#223045; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--paper)}
+body{
+  height:100%;margin:0;color:var(--ink);font:16px/1.45 var(--ui);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;-webkit-tap-highlight-color:transparent;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#app{height:100%;display:flex;flex-direction:column;max-width:640px;margin:0 auto}
+.top{display:flex;align-items:baseline;justify-content:space-between;padding:14px 20px 6px}
+.brand{font:italic 600 1.6rem/1 var(--serif);margin:0;letter-spacing:.01em}
+.brand::after{content:" \220E";font-style:normal;font-size:.8em}
+.sync{font-size:.8rem;color:var(--soft)}
+main{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 20px 28px;-webkit-overflow-scrolling:touch}
+.tabs{display:flex;border-top:1px solid var(--line);background:var(--paper)}
+.tabs button{flex:1;border:0;background:none;padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.78rem;color:var(--soft);font-weight:500}
+.tabs button svg{width:22px;height:22px}
+.tabs button[aria-current="page"]{color:var(--ink);font-weight:700}
+
+h2,h3{font-family:var(--serif);font-weight:600;margin:0}
+.date{color:var(--soft);margin:10px 0 2px}
+.due{font-size:2.1rem;line-height:1.15;margin:0 0 6px}
+.hl{background:linear-gradient(transparent 52%,var(--hi) 52%,var(--hi) 88%,transparent 88%);padding:0 .08em}
+.sub{color:var(--soft);margin:0 0 18px}
+.muted{color:var(--soft)}
+.small{font-size:.85rem}
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:10px;padding:10px 16px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.big{width:100%;padding:15px;font-size:1.05rem}
+.btn.quiet{border-color:var(--line);font-weight:500}
+.btn.danger{border-color:var(--again);color:var(--again)}
+.btn[disabled]{opacity:.4;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:10px}
+.section{margin-top:28px}
+.section>h3{font-size:1.2rem;margin-bottom:10px}
+
+.week{display:flex;justify-content:space-between;margin:22px 0 4px}
+.day{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:.78rem;color:var(--soft);flex:1}
+.dot{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.72rem;font-weight:600;color:var(--ink)}
+.dot.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.day.today .dot{border-color:var(--ink);border-width:2px}
+.streak{text-align:center;color:var(--soft);font-size:.9rem;margin:8px 0 0}
+
+.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.item{display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line)}
+.item .grow{flex:1;min-width:0}
+.item .name{font-weight:600;overflow-wrap:anywhere}
+.item .meta{font-size:.85rem;color:var(--soft)}
+.tap{background:none;border:0;padding:0;text-align:left;width:100%;display:flex;align-items:center;gap:12px}
+.pill{font-size:.8rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--hi);color:#1B2A4A;white-space:nowrap}
+.pill.zero{background:var(--chip);color:var(--soft);font-weight:600}
+.back{background:none;border:0;padding:4px 0;color:var(--soft);font-weight:500;margin:4px 0 6px}
+.title-input{font:600 1.55rem/1.2 var(--serif);border:0;border-bottom:1.5px dashed transparent;background:transparent;width:100%;padding:2px 0;border-radius:0}
+.title-input:focus{outline:none;border-bottom-color:var(--line)}
+.status{font-size:.85rem;color:var(--soft)}
+.status.err{color:var(--again)}
+.status.busy{color:var(--ink);font-weight:500}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-weight:600;font-size:.92rem}
+.input,select.input,textarea.input{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;width:100%}
+textarea.input{min-height:90px;resize:vertical;font-family:var(--serif)}
+.note{font-size:.88rem;color:var(--soft);margin:6px 0 14px}
+.chrow{border-bottom:1px solid var(--line);padding:12px 0;display:grid;grid-template-columns:1fr auto;gap:8px 10px;align-items:center}
+.chrow .input{padding:8px 10px}
+.pages{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--soft)}
+.pages input{width:64px}
+.peek{grid-column:1/-1;font-size:.8rem;color:var(--soft);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meter{height:6px;border-radius:3px;background:var(--chip);overflow:hidden;margin:12px 0 6px}
+.meter>i{display:block;height:100%;background:var(--ink);width:0;transition:width .2s}
+
+.cardlist{list-style:none;padding:0;margin:0}
+.cl{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:6px;padding:12px 14px;margin:0 0 10px}
+.cl .lab{font-size:.8rem;color:var(--soft);display:flex;justify-content:space-between;gap:8px}
+.cl .f{font-family:var(--serif);font-weight:600;margin:6px 0}
+.cl .b{font-family:var(--serif);white-space:pre-wrap;overflow-x:auto}
+.cl .acts{display:flex;gap:14px;margin-top:8px}
+.link{background:none;border:0;padding:0;color:var(--soft);font-size:.85rem;text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;font-size:.84rem;color:var(--soft)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.empty{text-align:center;padding:40px 10px;color:var(--soft)}
+.empty h3{color:var(--ink);margin-bottom:6px}
+.stepper{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:10px}
+.stepper button{border:0;background:none;width:38px;height:36px;font-size:1.1rem}
+.stepper span{min-width:34px;text-align:center;font-weight:600}
+
+.study{position:fixed;inset:0;z-index:20;background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;
+  display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.study[hidden]{display:none}
+.study-top{display:flex;align-items:center;gap:12px;padding:10px 16px;max-width:640px;width:100%;margin:0 auto}
+.study-top .meter{flex:1;margin:0}
+.study-top .count{font-size:.85rem;color:var(--soft);min-width:48px;text-align:right}
+.cardwrap{flex:1;overflow-y:auto;padding:8px 16px 16px;max-width:640px;width:100%;margin:0 auto}
+.index{
+  --lh:1.9rem;background-color:var(--card);border-radius:5px;min-height:100%;position:relative;cursor:pointer;
+  box-shadow:0 1px 0 var(--line),0 18px 30px -22px rgba(15,25,45,.55);
+  padding:14px 18px 22px;border:1px solid var(--line);
+}
+.index .meta{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--soft);min-height:1.2rem}
+.index .type{font-weight:700;color:var(--red)}
+.index .q{font:600 1.22rem/1.5 var(--serif);margin:10px 0 14px;padding-bottom:14px;border-bottom:2px solid var(--red);overflow-x:auto}
+.index .a{font:1.1rem/var(--lh) var(--serif);white-space:pre-wrap;overflow-x:auto;
+  background-image:linear-gradient(transparent calc(var(--lh) - 1px),var(--blue) calc(var(--lh) - 1px));background-size:100% var(--lh);background-attachment:local;min-height:calc(var(--lh) * 5)}
+.index .a.hidden-ans{color:transparent;user-select:none}
+.index .a.hidden-ans *{visibility:hidden}
+.index .hint{margin-top:14px;font:italic .98rem/1.5 var(--serif);color:var(--soft)}
+.index .reveal-note{position:absolute;left:0;right:0;bottom:calc(var(--lh) * 2);text-align:center;color:var(--soft);font-size:.9rem;pointer-events:none}
+.index .src{font-size:.78rem;color:var(--soft);margin-top:10px}
+.reveal{animation:ink .28s ease-out}
+.pick-note{font-size:.85rem;color:var(--soft);margin:-4px 0 12px}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:block;width:100%;text-align:left;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card);font:1.02rem/1.55 var(--serif);white-space:pre-wrap;overflow-x:auto;color:var(--ink)}
+.choice:hover{border-color:var(--soft)}
+.choice[disabled]{cursor:default;opacity:.55}
+.choice.right{opacity:1;border-color:var(--good);box-shadow:inset 0 0 0 1.5px var(--good)}
+.choice.wrong{opacity:1;border-color:var(--again);box-shadow:inset 0 0 0 1.5px var(--again)}
+.choice .verdict{display:block;font:700 .8rem/1.4 var(--ui);margin-bottom:4px}
+.choice .verdict[hidden]{display:none}
+.choice.right .verdict{color:var(--good)}
+.choice.wrong .verdict{color:var(--again)}
+.modebadge{font-weight:500;color:var(--soft)}
+@keyframes ink{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.grades{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 16px 14px;max-width:640px;width:100%;margin:0 auto}
+.grades.two{grid-template-columns:1fr 1fr}
+.grades button{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:700}
+.grades button small{font-weight:500;color:var(--soft);font-size:.75rem}
+.grades .g0{color:var(--again);border-color:var(--again)}
+.grades .g2{color:var(--good);border-color:var(--good)}
+.grades .wide{grid-column:1/-1;background:var(--ink);color:var(--paper);border-color:var(--ink);padding:15px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;font-size:.9rem;z-index:40;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}
+mjx-container[display="true"]{margin:.4em 0 !important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  svg:{fontCache:'global'},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code','input','select']},
+  startup:{typeset:false,ready(){MathJax.startup.defaultReady();MathJax.startup.promise.then(()=>{window.__mjReady=true;if(window.__mjFlush)window.__mjFlush();});}}
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js" defer></script>
+</head>
+<body>
+<div id="app">
+  <header class="top"><h1 class="brand">Lemma</h1><span id="sync" class="sync"></span></header>
+  <main id="view" aria-live="polite"></main>
+  <nav class="tabs" aria-label="Sections">
+    <button data-act="tab" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="1.5"/><path d="M4 10h16"/></svg>Today</button>
+    <button data-act="tab" data-tab="modules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>Modules</button>
+    <button data-act="tab" data-tab="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add notes</button>
+  </nav>
+</div>
+
+<div id="study" class="study" hidden>
+  <div class="study-top">
+    <button class="back" data-act="study-close" style="margin:0">Close</button>
+    <div class="meter"><i id="sbar"></i></div>
+    <span class="count" id="scount"></span>
+  </div>
+  <div class="cardwrap" id="cardwrap"></div>
+  <div class="grades" id="grades"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+const SEED={"modules":{"m_mt3501":{"id":"m_mt3501","name":"MT3501 Linear Mathematics 2","created":1,"upd":1,"seed":true},"m_mt3507":{"id":"m_mt3507","name":"MT3507 Mathematical Statistics","created":2,"upd":1,"seed":true},"m_mt3504":{"id":"m_mt3504","name":"MT3504 Differential Equations","created":3,"upd":1,"seed":true},"m_mt4514":{"id":"m_mt4514","name":"MT4514 Graph Theory","created":4,"upd":1,"seed":true}},"chapters":{"c_mt3501_1":{"id":"c_mt3501_1","moduleId":"m_mt3501","title":"1. Vector spaces","start":3,"end":22,"order":1,"cards":[{"id":"k_mt3501_1_1","type":"definition","label":"Definition 1.3","front":"Define a vector space over a field $F$.","back":"A set $V$ with addition $V\\times V\\to V$ and scalar multiplication $F\\times V\\to V$ such that:\n(V1) $u+v=v+u$;\n(V2) $(u+v)+w=u+(v+w)$;\n(V3) there is $\\mathbf{0}\\in V$ with $v+\\mathbf{0}=v$;\n(V4) each $v$ has an additive inverse $-v$ with $v+(-v)=\\mathbf{0}$;\n(V5) $\\alpha(u+v)=\\alpha u+\\alpha v$;\n(V6) $(\\alpha+\\beta)v=\\alpha v+\\beta v$;\n(V7) $(\\alpha\\beta)v=\\alpha(\\beta v)$;\n(V8) $1v=v$,\nfor all $u,v,w\\in V$ and $\\alpha,\\beta\\in F$.","hint":"","page":null},{"id":"k_mt3501_1_2","type":"proposition","label":"Proposition 1.5","front":"Let $V$ be a vector space over $F$, $v\\in V$, $\\alpha\\in F$. State the four basic properties of $\\mathbf 0$ and scalar multiplication.","back":"(i) $\\alpha\\mathbf{0}=\\mathbf{0}$;\n(ii) $0v=\\mathbf{0}$;\n(iii) if $\\alpha v=\\mathbf{0}$ then $\\alpha=0$ or $v=\\mathbf{0}$;\n(iv) $(-\\alpha)v=-\\alpha v=\\alpha(-v)$.","hint":"","page":null},{"id":"k_mt3501_1_3","type":"definition","label":"Definition 1.6","front":"Define a subspace $W$ of a vector space $V$ over $F$.","back":"A non-empty subset $W\\subseteq V$ such that\n(i) $u,v\\in W\\Rightarrow u+v\\in W$, and\n(ii) $v\\in W,\\ \\alpha\\in F\\Rightarrow \\alpha v\\in W$.\nThat is, $W$ is closed under addition and scalar multiplication.","hint":"","page":null},{"id":"k_mt3501_1_4","type":"lemma","label":"Lemma 1.7","front":"If $W$ is a subspace of $V$, which two vectors/properties must $W$ contain?","back":"(i) $\\mathbf 0\\in W$;\n(ii) if $v\\in W$ then $-v\\in W$.","hint":"","page":null},{"id":"k_mt3501_1_5","type":"definition","label":"Definition 1.9","front":"Define the intersection and the sum of subspaces $U$ and $W$ of $V$.","back":"$U\\cap W=\\{v\\mid v\\in U \\text{ and } v\\in W\\}$\n$U+W=\\{u+w\\mid u\\in U,\\ w\\in W\\}$","hint":"","page":null},{"id":"k_mt3501_1_6","type":"proposition","label":"Proposition 1.10","front":"If $U$, $W$ are subspaces of $V$, what can you say about $U\\cap W$ and $U+W$?","back":"Both $U\\cap W$ and $U+W$ are subspaces of $V$.","hint":"","page":null},{"id":"k_mt3501_1_7","type":"definition","label":"Definition 1.12","front":"Define a linear combination of $v_1,\\dots,v_k$ and their span.","back":"A linear combination is a vector $\\alpha_1v_1+\\alpha_2v_2+\\dots+\\alpha_kv_k$ with $\\alpha_i\\in F$. The span $\\operatorname{Span}(v_1,\\dots,v_k)$ is the set of all such linear combinations.","hint":"","page":null},{"id":"k_mt3501_1_8","type":"proposition","label":"Proposition 1.13","front":"What kind of set is $\\operatorname{Span}(\\mathscr A)$ for a set of vectors $\\mathscr A$ in $V$?","back":"$\\operatorname{Span}(\\mathscr A)$ is a subspace of $V$.","hint":"","page":null},{"id":"k_mt3501_1_9","type":"definition","label":"Definition 1.14","front":"What is a spanning set for a subspace $W$?","back":"A subset $\\mathscr A\\subseteq W$ with $\\operatorname{Span}(\\mathscr A)=W$, so every $v\\in W$ can be written $v=\\sum_{i=1}^k\\alpha_iv_i$ with $v_i\\in\\mathscr A$, $\\alpha_i\\in F$.","hint":"","page":null},{"id":"k_mt3501_1_10","type":"definition","label":"Definition 1.16","front":"When is a finite set $\\{v_1,\\dots,v_k\\}$ linearly independent?","back":"If the only solution of $\\displaystyle\\sum_{i=1}^k\\alpha_iv_i=\\mathbf 0$ (with $\\alpha_i\\in F$) is $\\alpha_1=\\alpha_2=\\dots=\\alpha_k=0$. Otherwise the set is linearly dependent.","hint":"","page":null},{"id":"k_mt3501_1_11","type":"lemma","label":"Lemma 1.17","front":"Characterise linear independence of $\\mathscr A=\\{v_1,\\dots,v_k\\}$ in terms of linear combinations.","back":"$\\mathscr A$ is linearly independent if and only if no vector in $\\mathscr A$ can be expressed as a linear combination of the others.","hint":"","page":null},{"id":"k_mt3501_1_12","type":"lemma","label":"Lemma 1.18","front":"If $\\mathscr A$ is linearly dependent, what can you remove without changing the span?","back":"There is some $v\\in\\mathscr A$ such that $\\mathscr A\\setminus\\{v\\}$ spans the same subspace as $\\mathscr A$.","hint":"","page":null},{"id":"k_mt3501_1_13","type":"theorem","label":"Theorem 1.19","front":"If $\\mathscr A$ is a finite subset of $V$ and $W=\\operatorname{Span}(\\mathscr A)$, what subset can you find?","back":"There is a linearly independent subset $\\mathscr B\\subseteq\\mathscr A$ with $\\operatorname{Span}(\\mathscr B)=W$.","hint":"Repeatedly remove a vector that is a linear combination of the others (Lemmas 1.17, 1.18).","page":null},{"id":"k_mt3501_1_14","type":"definition","label":"Definition 1.20","front":"Define a basis, finite-dimensional, and $\\dim V$.","back":"A basis for $V$ is a linearly independent spanning set. $V$ is finite-dimensional if it has a finite spanning set (equivalently a finite basis). $\\dim V$ is the size of any basis for $V$.","hint":"","page":null},{"id":"k_mt3501_1_15","type":"lemma","label":"Lemma 1.22","front":"Let $\\mathscr B=\\{v_1,\\dots,v_n\\}$ be a basis for $V$. What is special about expressing $v\\in V$ in terms of $\\mathscr B$?","back":"Every vector in $V$ can be expressed as a linear combination of the vectors in $\\mathscr B$ in a unique way.","hint":"Two expressions subtract to a linear relation; independence forces equal coefficients.","page":null},{"id":"k_mt3501_1_16","type":"theorem","label":"Theorem 1.23","front":"Compare the size $m$ of a linearly independent set $\\{v_1,\\dots,v_m\\}$ with the size $n$ of a spanning set $\\{w_1,\\dots,w_n\\}$ in finite-dimensional $V$.","back":"$m\\leqslant n$.","hint":"Exchange the $v_j$ into the spanning set one at a time, replacing a $w_i$ each time.","page":null},{"id":"k_mt3501_1_17","type":"corollary","label":"Corollary 1.24","front":"Why is $\\dim V$ well defined for finite-dimensional $V$?","back":"Any two bases for $V$ have the same size, so $\\dim V$ is uniquely determined.","hint":"Apply Theorem 1.23 twice: $m\\leqslant n$ and $n\\leqslant m$.","page":null},{"id":"k_mt3501_1_18","type":"proposition","label":"Proposition 1.26","front":"What can be done to any linearly independent set in a finite-dimensional space $V$?","back":"It can be extended to a basis for $V$ by adjoining a finite number of vectors.","hint":"","page":null},{"id":"k_mt3501_1_19","type":"corollary","label":"Corollary 1.27","front":"If $\\dim V=n$ and $\\mathscr A$ is linearly independent with $n$ vectors, what is $\\mathscr A$?","back":"$\\mathscr A$ is a basis for $V$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3501_2":{"id":"c_mt3501_2","moduleId":"m_mt3501","title":"2. Linear transformations","start":23,"end":42,"order":2,"cards":[{"id":"k_mt3501_2_1","type":"definition","label":"Definition 2.1","front":"Define a linear map $T:V\\to W$ between vector spaces over $F$.","back":"A function $T:V\\to W$ such that\n(i) $T(u+v)=T(u)+T(v)$ for all $u,v\\in V$;\n(ii) $T(\\alpha v)=\\alpha T(v)$ for all $v\\in V$, $\\alpha\\in F$.","hint":"","page":null},{"id":"k_mt3501_2_2","type":"lemma","label":"Lemma 2.2","front":"State three basic properties of a linear map $T:V\\to W$.","back":"(i) $T(\\mathbf 0_V)=\\mathbf 0_W$;\n(ii) $T(-v)=-T(v)$;\n(iii) $T\\left(\\sum_{i=1}^k\\alpha_iv_i\\right)=\\sum_{i=1}^k\\alpha_iT(v_i)$.","hint":"","page":null},{"id":"k_mt3501_2_3","type":"definition","label":"Definition 2.3","front":"Define the image and kernel of a linear map $T:V\\to W$.","back":"$\\operatorname{im}T=T(V)=\\{T(v)\\mid v\\in V\\}\\subseteq W$\n$\\ker T=\\{v\\in V\\mid T(v)=\\mathbf 0_W\\}\\subseteq V$ (the null space).","hint":"","page":null},{"id":"k_mt3501_2_4","type":"proposition","label":"Proposition 2.4","front":"What kind of sets are $\\operatorname{im}T$ and $\\ker T$?","back":"$\\operatorname{im}T$ is a subspace of $W$ and $\\ker T$ is a subspace of $V$.","hint":"","page":null},{"id":"k_mt3501_2_5","type":"definition","label":"Definition 2.5","front":"Define $\\operatorname{rank}T$ and $\\operatorname{null}T$.","back":"$\\operatorname{rank}T=\\dim\\operatorname{im}T$ and $\\operatorname{null}T=\\dim\\ker T$.","hint":"","page":null},{"id":"k_mt3501_2_6","type":"theorem","label":"Theorem 2.6 (Rank–Nullity Theorem)","front":"State the Rank–Nullity Theorem.","back":"Let $V,W$ be vector spaces over $F$ with $V$ finite-dimensional and $T:V\\to W$ linear. Then $$\\operatorname{rank}T+\\operatorname{null}T=\\dim V.$$","hint":"Extend a basis of $\\ker T$ to a basis of $V$; the images of the added vectors form a basis of $\\operatorname{im}T$.","page":null},{"id":"k_mt3501_2_7","type":"proposition","label":"Proposition 2.7","front":"How can you define a linear map $T:V\\to W$ using a basis $\\{v_1,\\dots,v_n\\}$ of $V$?","back":"For any $y_1,\\dots,y_n\\in W$ there is a unique linear map $T:V\\to W$ with $T(v_i)=y_i$ for $i=1,\\dots,n$.","hint":"","page":null},{"id":"k_mt3501_2_8","type":"proposition","label":"Proposition 2.9","front":"If $T(v_i)=y_i$ for a basis $\\{v_1,\\dots,v_n\\}$ of $V$, what are $\\operatorname{im}T$ and when is $\\ker T=\\{\\mathbf 0\\}$?","back":"(i) $\\operatorname{im}T=\\operatorname{Span}(y_1,\\dots,y_n)$.\n(ii) $\\ker T=\\{\\mathbf 0\\}$ if and only if $\\{y_1,\\dots,y_n\\}$ is linearly independent.","hint":"","page":null},{"id":"k_mt3501_2_9","type":"definition","label":"Definition 2.10","front":"Define the matrix of $T:V\\to W$ with respect to bases $\\mathscr B=\\{v_1,\\dots,v_n\\}$, $\\mathscr C=\\{w_1,\\dots,w_m\\}$.","back":"Write $T(v_j)=\\sum_{i=1}^m\\alpha_{ij}w_i$ for $j=1,\\dots,n$. Then $\\operatorname{Mat}_{\\mathscr B,\\mathscr C}(T)$ is the $m\\times n$ matrix $A=[\\alpha_{ij}]$: column $j$ holds the coordinates of $T(v_j)$ in $\\mathscr C$.","hint":"","page":null},{"id":"k_mt3501_2_10","type":"theorem","label":"Theorem 2.12","front":"If $A$ and $B$ are the matrices of $T:V\\to V$ with respect to bases $\\mathscr B$ and $\\mathscr C$, how are they related?","back":"There is an invertible matrix $P$ with $$B=P^{-1}AP,$$ where column $j$ of $P$ holds the coefficients of $w_j$ written in terms of $\\mathscr B$.","hint":"","page":null},{"id":"k_mt3501_2_11","type":"definition","label":"Definition 2.14","front":"Define $S+T$ and $\\alpha T$ for linear maps $S,T:V\\to W$.","back":"$(S+T)(v)=S(v)+T(v)$ and $(\\alpha T)(v)=\\alpha\\cdot T(v)$.","hint":"","page":null},{"id":"k_mt3501_2_12","type":"theorem","label":"Theorem 2.17","front":"What is $\\mathcal L(V,W)$ and its dimension if $\\dim V=n$, $\\dim W=m$?","back":"The set $\\mathcal L(V,W)$ of linear maps $V\\to W$ is a vector space over $F$ under the operations of Definition 2.14, and $\\dim\\mathcal L(V,W)=mn$.","hint":"","page":null},{"id":"k_mt3501_2_13","type":"definition","label":"Definition 2.18","front":"Define a linear functional and the dual space $V^*$.","back":"A linear functional is a linear map $f:V\\to F$. The dual space $V^*$ is the space of all linear functionals on $V$, with $(f+g)(v)=f(v)+g(v)$ and $(\\alpha f)(v)=\\alpha f(v)$.","hint":"","page":null},{"id":"k_mt3501_2_14","type":"theorem","label":"Theorem 2.19","front":"What is $\\dim V^*$, and what is the natural (dual) basis?","back":"$V^*$ is a vector space with $\\dim V^*=\\dim V$. If $\\{v_1,\\dots,v_n\\}$ is a basis of $V$, then $f_1,\\dots,f_n$ with $f_i(v_j)=\\delta_{ij}$ form a basis of $V^*$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3501_3":{"id":"c_mt3501_3","moduleId":"m_mt3501","title":"3. Direct sums","start":43,"end":50,"order":3,"cards":[{"id":"k_mt3501_3_1","type":"definition","label":"Definition 3.1","front":"When is $V$ the direct sum $V=U_1\\oplus U_2$?","back":"When every vector in $V$ can be expressed uniquely as $u_1+u_2$ with $u_1\\in U_1$ and $u_2\\in U_2$.","hint":"","page":null},{"id":"k_mt3501_3_2","type":"proposition","label":"Proposition 3.2","front":"Give the two conditions equivalent to $V=U_1\\oplus U_2$.","back":"(i) $V=U_1+U_2$;\n(ii) $U_1\\cap U_2=\\{\\mathbf 0\\}$.","hint":"","page":null},{"id":"k_mt3501_3_3","type":"proposition","label":"Proposition 3.4","front":"If $V=U_1\\oplus U_2$ and $\\mathscr B_1,\\mathscr B_2$ are bases of $U_1,U_2$, what is $\\mathscr B_1\\cup\\mathscr B_2$?","back":"A basis for $V$.","hint":"","page":null},{"id":"k_mt3501_3_4","type":"corollary","label":"Corollary 3.5","front":"Give $\\dim V$ when $V=U_1\\oplus U_2$ is finite-dimensional.","back":"$\\dim V=\\dim U_1+\\dim U_2$.","hint":"","page":null},{"id":"k_mt3501_3_5","type":"definition","label":"Definition 3.6","front":"Define the projection maps for $V=U_1\\oplus U_2$.","back":"Write $v=u_1+u_2$ uniquely with $u_i\\in U_i$. Then $P_1(v)=u_1$ and $P_2(v)=u_2$ define $P_1,P_2:V\\to V$, the projections onto $U_1$ and $U_2$.","hint":"","page":null},{"id":"k_mt3501_3_6","type":"lemma","label":"Lemma 3.7","front":"State the kernels and images of the projections $P_1,P_2$ for $V=U_1\\oplus U_2$.","back":"$P_1,P_2$ are linear; $P_1(u)=u$ on $U_1$ and $P_1(w)=\\mathbf 0$ on $U_2$ (and vice versa for $P_2$);\n$\\ker P_1=U_2$, $\\operatorname{im}P_1=U_1$; $\\ker P_2=U_1$, $\\operatorname{im}P_2=U_2$.","hint":"","page":null},{"id":"k_mt3501_3_7","type":"proposition","label":"Proposition 3.8","front":"List four properties of a projection $P:V\\to V$.","back":"(i) $P^2=P$;\n(ii) $V=\\ker P\\oplus\\operatorname{im}P$;\n(iii) $I-P$ is also a projection;\n(iv) $V=\\ker P\\oplus\\ker(I-P)$.","hint":"","page":null},{"id":"k_mt3501_3_8","type":"proposition","label":"Proposition 3.11","front":"When is $V=U_1\\oplus\\dots\\oplus U_k$? Give the sum/intersection conditions.","back":"(i) $V=U_1+U_2+\\dots+U_k$; and\n(ii) $U_i\\cap(U_1+\\dots+U_{i-1}+U_{i+1}+\\dots+U_k)=\\{\\mathbf 0\\}$ for each $i$.","hint":"Pairwise trivial intersections are not enough.","page":null},{"id":"k_mt3501_3_9","type":"proposition","label":"Proposition 3.12","front":"If $V=U_1\\oplus\\dots\\oplus U_k$ and $\\mathscr B_i$ is a basis of $U_i$, what is $\\mathscr B_1\\cup\\dots\\cup\\mathscr B_k$?","back":"A basis for $V$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3501_4":{"id":"c_mt3501_4","moduleId":"m_mt3501","title":"4. Diagonalisation of linear transformations","start":51,"end":72,"order":4,"cards":[{"id":"k_mt3501_4_1","type":"definition","label":"Definition 4.1","front":"Define an eigenvector and eigenvalue of $T:V\\to V$.","back":"A non-zero vector $v$ is an eigenvector for $T$ with eigenvalue $\\lambda\\in F$ if $T(v)=\\lambda v$.","hint":"$v\\neq\\mathbf0$ matters: $T(\\mathbf 0)=\\lambda\\mathbf 0$ for every $\\lambda$.","page":null},{"id":"k_mt3501_4_2","type":"definition","label":"Definition 4.2","front":"Define the eigenspace $E_\\lambda$.","back":"$E_\\lambda=\\ker(T-\\lambda I)=\\{v\\in V\\mid T(v)=\\lambda v\\}$.","hint":"","page":null},{"id":"k_mt3501_4_3","type":"definition","label":"Definition 4.3","front":"Define the characteristic polynomial $c_T(x)$.","back":"$c_T(x)=\\det(xI-A)$, where $A$ is the matrix of $T$ with respect to some basis.","hint":"","page":null},{"id":"k_mt3501_4_4","type":"lemma","label":"Lemma 4.4","front":"How are eigenvalues related to $c_T(x)$?","back":"$\\lambda$ is an eigenvalue of $T$ if and only if $\\lambda$ is a root of $c_T(x)$.","hint":"","page":null},{"id":"k_mt3501_4_5","type":"lemma","label":"Lemma 4.5","front":"Does $c_T(x)$ depend on the basis chosen?","back":"No: $c_T(x)$ is independent of the choice of basis, so it depends only on $T$.","hint":"$\\det(xI-P^{-1}AP)=\\det(P^{-1}(xI-A)P)=\\det(xI-A)$.","page":null},{"id":"k_mt3501_4_6","type":"definition","label":"Definition 4.6","front":"When is $T$ diagonalisable, and when is a square matrix $A$ diagonalisable?","back":"(i) $T$ is diagonalisable if $V$ has a basis consisting of eigenvectors for $T$.\n(ii) $A$ is diagonalisable if there is an invertible $P$ with $P^{-1}AP$ diagonal.","hint":"","page":null},{"id":"k_mt3501_4_7","type":"proposition","label":"Proposition 4.7","front":"When is the matrix of $T$ with respect to a basis $\\mathscr B$ diagonal?","back":"If and only if the vectors in $\\mathscr B$ are all eigenvectors for $T$.","hint":"","page":null},{"id":"k_mt3501_4_8","type":"lemma","label":"Lemma 4.10","front":"What does diagonalisability of $T$ imply about $c_T(x)$?","back":"If $T$ is diagonalisable then $c_T(x)$ is a product of linear factors.","hint":"","page":null},{"id":"k_mt3501_4_9","type":"definition","label":"Definition 4.12","front":"Define the algebraic and geometric multiplicity of an eigenvalue $\\lambda$.","back":"Algebraic multiplicity $r_\\lambda$: the largest $k$ such that $(x-\\lambda)^k$ divides $c_T(x)$.\nGeometric multiplicity $n_\\lambda$: $\\dim E_\\lambda$.","hint":"","page":null},{"id":"k_mt3501_4_10","type":"proposition","label":"Proposition 4.13","front":"What can you say about eigenvectors for distinct eigenvalues?","back":"A set of eigenvectors of $T$ corresponding to distinct eigenvalues is linearly independent.","hint":"","page":null},{"id":"k_mt3501_4_11","type":"theorem","label":"Theorem 4.14","front":"State the three parts of Theorem 4.14 on multiplicities and diagonalisability.","back":"(i) If $c_T(x)$ is a product of linear factors (e.g. $F=\\mathbb C$), the algebraic multiplicities sum to $\\dim V$.\n(ii) $n_\\lambda\\leqslant r_\\lambda$ for every $\\lambda$.\n(iii) $T$ is diagonalisable iff $c_T(x)$ is a product of linear factors and $n_\\lambda=r_\\lambda$ for all eigenvalues $\\lambda$.","hint":"","page":null},{"id":"k_mt3501_4_12","type":"definition","label":"Definition 4.15","front":"Define the minimum polynomial $m_T(x)$.","back":"The monic polynomial over $F$ of smallest degree such that $m_T(T)=0$.","hint":"","page":null},{"id":"k_mt3501_4_13","type":"theorem","label":"Theorem 4.16 (Cayley–Hamilton Theorem)","front":"State the Cayley–Hamilton Theorem.","back":"If $T:V\\to V$ is a linear transformation of a finite-dimensional vector space with characteristic polynomial $c_T(x)$, then $$c_T(T)=0.$$","hint":"Proof omitted in the notes.","page":null},{"id":"k_mt3501_4_14","type":"proposition","label":"Proposition 4.18","front":"If $f(T)=0$ for a polynomial $f$, how is $f$ related to $m_T$?","back":"$m_T(x)$ divides $f(x)$.","hint":"Divide: $f=qm_T+r$ with $\\deg r<\\deg m_T$; then $r(T)=0$ forces $r=0$.","page":null},{"id":"k_mt3501_4_15","type":"corollary","label":"Corollary 4.19","front":"How are $m_T(x)$ and $c_T(x)$ related by divisibility?","back":"$m_T(x)$ divides $c_T(x)$.","hint":"Cayley–Hamilton plus Proposition 4.18.","page":null},{"id":"k_mt3501_4_16","type":"theorem","label":"Theorem 4.20","front":"Compare the roots of $m_T(x)$ and $c_T(x)$.","back":"The roots of $m_T(x)$ and of $c_T(x)$ coincide (and are exactly the eigenvalues of $T$).","hint":"","page":null},{"id":"k_mt3501_4_17","type":"theorem","label":"Theorem 4.21","front":"Characterise diagonalisability using the minimum polynomial.","back":"$T$ is diagonalisable if and only if $m_T(x)$ is a product of distinct linear factors.","hint":"","page":null},{"id":"k_mt3501_4_18","type":"lemma","label":"Lemma 4.22","front":"Give the inequality for $\\operatorname{null}(ST)$ for linear maps $T:U\\to V$, $S:V\\to W$.","back":"$\\operatorname{null}ST\\leqslant\\operatorname{null}S+\\operatorname{null}T$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3501_5":{"id":"c_mt3501_5","moduleId":"m_mt3501","title":"5. Jordan normal form","start":73,"end":90,"order":5,"cards":[{"id":"k_mt3501_5_1","type":"definition","label":"Definition 5.1","front":"What is the Jordan block $J_n(\\lambda)$?","back":"The $n\\times n$ matrix with $\\lambda$ on the diagonal, $1$ on the superdiagonal and $0$ elsewhere: $$J_n(\\lambda)=\\begin{pmatrix}\\lambda&1&&\\\\&\\lambda&\\ddots&\\\\&&\\ddots&1\\\\&&&\\lambda\\end{pmatrix}.$$","hint":"","page":null},{"id":"k_mt3501_5_2","type":"theorem","label":"Theorem 5.2","front":"State the Jordan normal form theorem.","back":"If $V$ is finite-dimensional and $c_T(x)$ is a product of linear factors with eigenvalues $\\lambda_1,\\dots,\\lambda_n$, then there is a basis for $V$ with respect to which $\\operatorname{Mat}(T)$ is in Jordan normal form, each Jordan block having the form $J_m(\\lambda_i)$ for some $m$ and some $i$.","hint":"","page":null},{"id":"k_mt3501_5_3","type":"corollary","label":"Corollary 5.3","front":"What does Theorem 5.2 say about complex square matrices?","back":"For any square matrix $A$ over $\\mathbb C$ there is an invertible $P$ over $\\mathbb C$ with $P^{-1}AP$ in Jordan normal form.","hint":"","page":null},{"id":"k_mt3501_5_4","type":"corollary","label":"Corollary 5.4","front":"When are two complex square matrices similar?","back":"$A$ and $B$ over $\\mathbb C$ are similar ($B=P^{-1}AP$) if and only if they have the same Jordan normal form.","hint":"","page":null},{"id":"k_mt3501_5_5","type":"proposition","label":"Proposition 5.5","front":"For $J=J_n(\\lambda)$, give $c_J$, $m_J$ and $\\dim E_\\lambda$.","back":"(i) $c_J(x)=(x-\\lambda)^n$;\n(ii) $m_J(x)=(x-\\lambda)^n$;\n(iii) $\\dim E_\\lambda=1$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3501_6":{"id":"c_mt3501_6","moduleId":"m_mt3501","title":"6. Inner product spaces","start":91,"end":110,"order":6,"cards":[{"id":"k_mt3501_6_1","type":"definition","label":"Definition 6.1","front":"Define an inner product space over $F=\\mathbb R$ or $\\mathbb C$.","back":"A vector space $V$ with a map $V\\times V\\to F$, $(v,w)\\mapsto\\langle v,w\\rangle$, such that\n(i) $\\langle u+v,w\\rangle=\\langle u,w\\rangle+\\langle v,w\\rangle$;\n(ii) $\\langle\\alpha v,w\\rangle=\\alpha\\langle v,w\\rangle$;\n(iii) $\\langle v,w\\rangle=\\overline{\\langle w,v\\rangle}$;\n(iv) $\\langle v,v\\rangle$ is real with $\\langle v,v\\rangle\\geqslant0$;\n(v) $\\langle v,v\\rangle=0$ only if $v=\\mathbf 0$.","hint":"","page":null},{"id":"k_mt3501_6_2","type":"definition","label":"Definition 6.3","front":"Define the norm on an inner product space.","back":"$\\|v\\|=\\sqrt{\\langle v,v\\rangle}$.","hint":"","page":null},{"id":"k_mt3501_6_3","type":"lemma","label":"Lemma 6.4","front":"State three properties of the inner product and norm (conjugate linearity, scaling, positivity).","back":"(i) $\\langle v,\\alpha w\\rangle=\\bar\\alpha\\langle v,w\\rangle$;\n(ii) $\\|\\alpha v\\|=|\\alpha|\\,\\|v\\|$;\n(iii) $\\|v\\|>0$ whenever $v\\neq\\mathbf 0$.","hint":"","page":null},{"id":"k_mt3501_6_4","type":"theorem","label":"Theorem 6.5 (Cauchy–Schwarz Inequality)","front":"State the Cauchy–Schwarz Inequality.","back":"In an inner product space $V$, $$|\\langle u,v\\rangle|\\leqslant\\|u\\|\\,\\|v\\|\\quad\\text{for all }u,v\\in V.$$","hint":"","page":null},{"id":"k_mt3501_6_5","type":"corollary","label":"Corollary 6.6 (Triangle Inequality)","front":"State the Triangle Inequality.","back":"$\\|u+v\\|\\leqslant\\|u\\|+\\|v\\|$ for all $u,v\\in V$.","hint":"Expand $\\|u+v\\|^2$ and use Cauchy–Schwarz.","page":null},{"id":"k_mt3501_6_6","type":"definition","label":"Definition 6.7","front":"Define orthogonal vectors, an orthogonal set and an orthonormal set.","back":"$v,w$ are orthogonal if $\\langle v,w\\rangle=0$. A set is orthogonal if every pair of distinct vectors in it is orthogonal, and orthonormal if moreover every vector has norm $1$ (i.e. $\\langle v_i,v_j\\rangle=\\delta_{ij}$).","hint":"","page":null},{"id":"k_mt3501_6_7","type":"theorem","label":"Theorem 6.9","front":"What can you say about an orthogonal set of non-zero vectors?","back":"It is linearly independent.","hint":"Take the inner product of $\\sum\\alpha_iv_i=\\mathbf 0$ with each $v_j$.","page":null},{"id":"k_mt3501_6_8","type":"theorem","label":"Theorem 6.10 (Gram–Schmidt Process)","front":"Describe the Gram–Schmidt process for a basis $\\{v_1,\\dots,v_n\\}$.","back":"$e_1=\\dfrac{1}{\\|v_1\\|}v_1$. For $k\\geqslant2$: $$w_k=v_k-\\sum_{i=1}^{k-1}\\langle v_k,e_i\\rangle e_i,\\qquad e_k=\\frac{1}{\\|w_k\\|}w_k.$$ Then $\\{e_1,\\dots,e_n\\}$ is an orthonormal basis for $V$.","hint":"","page":null},{"id":"k_mt3501_6_9","type":"definition","label":"Definition 6.14","front":"Define the orthogonal complement $U^\\perp$.","back":"$U^\\perp=\\{v\\in V\\mid\\langle v,u\\rangle=0\\text{ for all }u\\in U\\}$.","hint":"","page":null},{"id":"k_mt3501_6_10","type":"lemma","label":"Lemma 6.15","front":"State two properties of $U^\\perp$.","back":"(i) $U^\\perp$ is a subspace of $V$;\n(ii) $U\\cap U^\\perp=\\{\\mathbf 0\\}$.","hint":"","page":null},{"id":"k_mt3501_6_11","type":"theorem","label":"Theorem 6.16","front":"For a subspace $U$ of a finite-dimensional inner product space $V$, how does $V$ decompose?","back":"$V=U\\oplus U^\\perp$.","hint":"Extend an orthonormal basis of $U$ to one of $V$ using Gram–Schmidt.","page":null},{"id":"k_mt3501_6_12","type":"theorem","label":"Theorem 6.17","front":"What is special about $P_U(v)$, the projection onto $U$ for $V=U\\oplus U^\\perp$?","back":"$P_U(v)$ is the vector in $U$ closest to $v$ (in the norm).","hint":"","page":null},{"id":"k_mt3501_6_13","type":"proposition","label":"Proposition 6.19","front":"Let $A$ be a real $m\\times n$ matrix with $\\ker A=\\{\\mathbf 0\\}$. State the three facts about $A^{\\mathsf T}A$ and projection onto $\\operatorname{im}A$.","back":"(i) $A^{\\mathsf T}A$ is invertible;\n(ii) $P=A(A^{\\mathsf T}A)^{-1}A^{\\mathsf T}$ is the projection onto $U=\\operatorname{im}A$ for $\\mathbb R^m=U\\oplus U^\\perp$;\n(iii) for $v\\in\\mathbb R^m$, $A(A^{\\mathsf T}A)^{-1}A^{\\mathsf T}v$ is the closest vector in $\\operatorname{im}A$ to $v$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3501_7":{"id":"c_mt3501_7","moduleId":"m_mt3501","title":"7. The adjoint of a transformation and self-adjoint transformations","start":111,"end":116,"order":7,"cards":[{"id":"k_mt3501_7_1","type":"definition","label":"Definition 7.1","front":"Define the adjoint $T^*$ of $T:V\\to V$.","back":"A map $T^*:V\\to V$ such that $\\langle T(v),w\\rangle=\\langle v,T^*(w)\\rangle$ for all $v,w\\in V$.","hint":"","page":null},{"id":"k_mt3501_7_2","type":"lemma","label":"Lemma 7.2","front":"Does the adjoint exist in a finite-dimensional inner product space?","back":"Yes: there is a unique adjoint $T^*$ of $T$, and $T^*$ is a linear transformation.","hint":"","page":null},{"id":"k_mt3501_7_3","type":"lemma","label":"Lemma 7.3","front":"If $A=\\operatorname{Mat}_{\\mathscr B,\\mathscr B}(T)$ for an orthonormal basis $\\mathscr B$, what is the matrix of $T^*$?","back":"$\\operatorname{Mat}_{\\mathscr B,\\mathscr B}(T^*)=\\bar A^{\\mathsf T}$, the conjugate transpose of $A$.","hint":"Only valid for an orthonormal basis.","page":null},{"id":"k_mt3501_7_4","type":"definition","label":"Definition 7.4","front":"When is $T$ self-adjoint?","back":"When $T^*=T$.","hint":"","page":null},{"id":"k_mt3501_7_5","type":"lemma","label":"Lemma 7.5","front":"Which real and complex matrices define self-adjoint transformations?","back":"(i) A real matrix: iff symmetric, $A^{\\mathsf T}=A$.\n(ii) A complex matrix: iff Hermitian, $\\bar A^{\\mathsf T}=A$.","hint":"","page":null},{"id":"k_mt3501_7_6","type":"theorem","label":"Theorem 7.6 (Spectral Theorem)","front":"State the Spectral Theorem.","back":"A self-adjoint transformation of a finite-dimensional inner product space is diagonalisable.","hint":"Induction: find an eigenvector $v_1$, set $U=\\operatorname{Span}(v_1)$; $U^\\perp$ is $T$-invariant (Lemma 7.9) and $T|_{U^\\perp}$ is self-adjoint.","page":null},{"id":"k_mt3501_7_7","type":"corollary","label":"Corollary 7.7","front":"What does the Spectral Theorem say about matrices?","back":"(i) A real symmetric matrix is diagonalisable.\n(ii) A Hermitian matrix is diagonalisable.","hint":"","page":null},{"id":"k_mt3501_7_8","type":"lemma","label":"Lemma 7.8","front":"What can you say about $c_T(x)$ and the eigenvalues of a self-adjoint $T$?","back":"$c_T(x)$ is a product of linear factors and every eigenvalue of $T$ is real.","hint":"","page":null},{"id":"k_mt3501_7_9","type":"lemma","label":"Lemma 7.9","front":"If $U$ is $T$-invariant, what can you say about $U^\\perp$?","back":"If $T(U)\\subseteq U$ then $T^*(U^\\perp)\\subseteq U^\\perp$.","hint":"","page":null},{"id":"k_mt3501_7_10","type":"lemma","label":"Lemma 7.10","front":"For self-adjoint $T$, how are eigenvectors for distinct eigenvalues related?","back":"They are orthogonal.","hint":"","page":null},{"id":"k_mt3501_7_11","type":"theorem","label":"Theorem 7.11 (Spectral Decomposition)","front":"State the Spectral Decomposition for self-adjoint $T$ with distinct eigenvalues $\\lambda_1,\\dots,\\lambda_k$.","back":"$V=E_{\\lambda_1}\\oplus\\dots\\oplus E_{\\lambda_k}$ is an orthogonal direct sum and, with $P_i$ the projection onto $E_{\\lambda_i}$:\n(i) $P_1+\\dots+P_k=I$;\n(ii) $\\lambda_1P_1+\\dots+\\lambda_kP_k=T$;\n(iii) $P_i^2=P_i=P_i^*$;\n(iv) $P_iP_j=0$ for $i\\neq j$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_1":{"id":"c_mt3507_1","moduleId":"m_mt3507","title":"1. Probability generating functions and moment generating functions","start":9,"end":14,"order":1,"cards":[{"id":"k_mt3507_1_1","type":"definition","label":"Definition 1.1","front":"Define the probability generating function $G(s)$ of a discrete random variable $X$.","back":"For $X$ taking non-negative integer values with $p_x=P(X=x)$: $$G(s)=E(s^X)=\\sum_{x=0}^\\infty s^xp_x,$$ where $s$ is a real variable.","hint":"The series always converges for $s\\in[-1,1]$.","page":null},{"id":"k_mt3507_1_2","type":"result","label":"Properties of the p.g.f.","front":"Give the mean, second factorial moment and variance of $X$ in terms of its p.g.f. $G$.","back":"$E(X)=G'(1)$\n$E[X(X-1)]=G''(1)$\n$\\operatorname{Var}(X)=G''(1)+G'(1)-(G'(1))^2$","hint":"","page":null},{"id":"k_mt3507_1_3","type":"result","label":"Properties of the p.g.f.","front":"What is the p.g.f. of $V=X+Y$ for independent $X$, $Y$, and what does uniqueness say?","back":"$G_V(s)=G_X(s)G_Y(s)$.\nUniqueness: if two discrete random variables have the same p.g.f., they have the same distribution.","hint":"","page":null},{"id":"k_mt3507_1_4","type":"definition","label":"Definition 1.2","front":"Define the moment generating function $M_X(t)$.","back":"$$M_X(t)=E\\left[e^{tX}\\right],$$ where $t$ is a real variable.","hint":"","page":null},{"id":"k_mt3507_1_5","type":"result","label":"Properties of the m.g.f.","front":"State the four properties of the m.g.f. (scaling, shifting, sums, uniqueness).","back":"(i) $M_{cX}(t)=M_X(ct)$;\n(ii) $M_{X+b}(t)=e^{bt}M_X(t)$;\n(iii) for independent $X,Y$: $M_{X+Y}(t)=M_X(t)M_Y(t)$;\n(iv) if $M_X(t)=M_Y(t)$ for all $t$ in an interval containing $0$, then $X$ and $Y$ have the same distribution.","hint":"","page":null},{"id":"k_mt3507_1_6","type":"definition","label":"Definition 1.3","front":"Define the $r$th moment $\\mu_r'$ and the $r$th central moment $\\mu_r$.","back":"$\\mu_r'=E(X^r)$ (about the origin);\n$\\mu_r=E[(X-\\mu)^r]$ where $\\mu=E(X)$.\nSo $\\mu_1'=\\mu$, $\\mu_1=0$ and $\\mu_2=\\operatorname{Var}(X)$.","hint":"","page":null},{"id":"k_mt3507_1_7","type":"proposition","label":"Proposition 1.1","front":"How do you get moments from the m.g.f.?","back":"For $r=1,2,3,\\dots$: $$\\mu_r'=M_X^{(r)}(0),\\quad\\text{where } M_X^{(r)}(t)=\\frac{d^r}{dt^r}M_X(t).$$","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_2":{"id":"c_mt3507_2","moduleId":"m_mt3507","title":"2. Continuous distributions","start":15,"end":30,"order":2,"cards":[{"id":"k_mt3507_2_1","type":"result","label":"Change of variable","front":"If $Y=g(X)$ with $g$ strictly monotone and inverse $x=h(y)$, what is $f_Y(y)$?","back":"$$f_Y(y)=f_X(h(y))\\left|\\frac{dh(y)}{dy}\\right|.$$","hint":"Increasing case: $F_Y(y)=F_X(h(y))$; decreasing: $F_Y(y)=1-F_X(h(y))$; differentiate.","page":null},{"id":"k_mt3507_2_2","type":"result","label":"Multivariate change of variable","front":"For a one-to-one transformation $\\mathbf Y=g(\\mathbf X)$ with inverse $\\mathbf x=h(\\mathbf y)$, give the joint p.d.f. of $\\mathbf Y$.","back":"$$f_{\\mathbf Y}(\\mathbf y)=f_{\\mathbf X}(h(\\mathbf y))\\,|J|,$$ where $|J|$ is the absolute value of $\\det\\dfrac{\\partial(h_1,\\dots,h_n)}{\\partial(y_1,\\dots,y_n)}$.","hint":"","page":null},{"id":"k_mt3507_2_3","type":"definition","label":"Definition 2.1","front":"Define the gamma function $\\Gamma(\\alpha)$ and state its key properties.","back":"$$\\Gamma(\\alpha)=\\int_0^\\infty y^{\\alpha-1}e^{-y}\\,dy,\\quad\\alpha>0.$$ $\\Gamma(\\alpha+1)=\\alpha\\Gamma(\\alpha)$, $\\Gamma(1)=1$, so $\\Gamma(n)=(n-1)!$ for positive integers $n$; $\\Gamma(1/2)=\\sqrt\\pi$.","hint":"","page":null},{"id":"k_mt3507_2_4","type":"definition","label":"Definition 2.2","front":"Give the p.d.f. of the gamma distribution $\\Gamma(\\alpha,\\lambda)$.","back":"$$f(x)=\\frac{\\lambda^\\alpha}{\\Gamma(\\alpha)}x^{\\alpha-1}e^{-\\lambda x},\\quad x>0,$$ for positive constants $\\alpha,\\lambda$.","hint":"Beware: an alternative (scale) parametrisation is also commonly used.","page":null},{"id":"k_mt3507_2_5","type":"definition","label":"Definition 2.3","front":"Give the p.d.f. of the $\\mathrm{Beta}(\\alpha,\\beta)$ distribution.","back":"$$f(x)=\\frac{1}{B(\\alpha,\\beta)}x^{\\alpha-1}(1-x)^{\\beta-1},\\quad 0<x<1,$$ with $\\alpha,\\beta>0$ and $B(\\alpha,\\beta)=\\dfrac{\\Gamma(\\alpha)\\Gamma(\\beta)}{\\Gamma(\\alpha+\\beta)}$.","hint":"If $U\\sim\\Gamma(\\alpha,\\lambda)$, $V\\sim\\Gamma(\\beta,\\lambda)$ are independent, $U/(U+V)\\sim\\mathrm{Beta}(\\alpha,\\beta)$.","page":null},{"id":"k_mt3507_2_6","type":"definition","label":"Definition 2.4","front":"Give the p.d.f. of the $t$ distribution on $n$ degrees of freedom.","back":"$$f(t)=\\frac{1}{B\\left(\\frac12,\\frac n2\\right)\\sqrt n}\\left(1+\\frac{t^2}{n}\\right)^{-\\frac{n+1}{2}},\\quad t\\in\\mathbb R.$$","hint":"","page":null},{"id":"k_mt3507_2_7","type":"theorem","label":"Theorem 2.1","front":"How is the $t_n$ distribution built from normal and $\\chi^2$ random variables?","back":"If $Z\\sim N(0,1)$ and $Y\\sim\\chi^2_n$ are independent, then $$T=\\frac{Z}{\\sqrt{Y/n}}\\sim t_n.$$","hint":"","page":null},{"id":"k_mt3507_2_8","type":"definition","label":"Multivariate normal","front":"Give the p.d.f. of $\\mathbf X\\sim N(\\boldsymbol\\mu,\\Sigma)$ in $k$ dimensions.","back":"$$f_{\\mathbf X}(\\mathbf x)=\\frac{1}{\\sqrt{(2\\pi)^k|\\Sigma|}}\\exp\\left(-\\tfrac12(\\mathbf x-\\boldsymbol\\mu)^{\\mathsf T}\\Sigma^{-1}(\\mathbf x-\\boldsymbol\\mu)\\right),$$ where $\\Sigma$ is symmetric positive definite with $\\Sigma_{ij}=\\operatorname{Cov}(X_i,X_j)$.","hint":"Uncorrelated components of a multivariate normal are independent.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_3":{"id":"c_mt3507_3","moduleId":"m_mt3507","title":"3. Common discrete distributions","start":31,"end":38,"order":3,"cards":[{"id":"k_mt3507_3_1","type":"equation","label":"Binomial distribution","front":"Give the p.m.f., mean and variance of $X\\sim\\mathrm{Bin}(n,p)$.","back":"$$P(X=x)=\\binom nx p^x(1-p)^{n-x},\\quad x=0,1,\\dots,n.$$ $E(X)=np$, $\\operatorname{Var}(X)=np(1-p)$.","hint":"Counts successes in $n$ independent Bernoulli trials.","page":null},{"id":"k_mt3507_3_2","type":"equation","label":"Poisson distribution","front":"Give the p.m.f., mean and variance of $X\\sim\\mathrm{Poisson}(\\lambda)$.","back":"$$p_x=\\frac{\\lambda^xe^{-\\lambda}}{x!},\\quad x=0,1,2,\\dots$$ Mean and variance are both $\\lambda$.","hint":"","page":null},{"id":"k_mt3507_3_3","type":"equation","label":"Negative binomial distribution","front":"If $X$ is the number of successes before the $r$th failure (success probability $p$), give $P(X=x)$.","back":"$$P(X=x)=\\binom{r+x-1}{x}p^x(1-p)^r,\\quad x=0,1,2,\\dots$$","hint":"The $r$th failure is on trial $r+x$; choose which $x$ of the first $r+x-1$ trials are successes.","page":null},{"id":"k_mt3507_3_4","type":"equation","label":"Multinomial distribution","front":"Give the joint p.m.f. of the counts $X_1,\\dots,X_k$ in $n$ trials with outcome probabilities $p_1,\\dots,p_k$.","back":"$$P(X_1=x_1,\\dots,X_k=x_k)=\\frac{n!}{x_1!\\cdots x_k!}p_1^{x_1}\\cdots p_k^{x_k},$$ where $\\sum x_i=n$ and $\\sum p_i=1$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_4":{"id":"c_mt3507_4","moduleId":"m_mt3507","title":"4. Maximum likelihood estimators","start":39,"end":44,"order":4,"cards":[{"id":"k_mt3507_4_1","type":"definition","label":"Definition 4.1","front":"Define a maximum likelihood estimator of $\\theta$.","back":"A statistic $\\hat\\theta(\\mathbf X)$ such that $$L(\\hat\\theta(\\mathbf X);\\mathbf X)=\\max_{\\theta\\in\\Theta}L(\\theta;\\mathbf X).$$ Its value $\\hat\\theta(\\mathbf x)$ for observed $\\mathbf x$ is the maximum likelihood estimate.","hint":"","page":null},{"id":"k_mt3507_4_2","type":"result","label":"Properties of MLEs","front":"State the three properties of the MLE $\\hat\\theta$.","back":"(i) Invariance: if $\\hat\\theta$ is an MLE of $\\theta$, then $g(\\hat\\theta)$ is an MLE of $g(\\theta)$ (even if $g$ is not one-to-one or differentiable).\n(ii) An MLE may be biased, but is consistent.\n(iii) An MLE is asymptotically normally distributed (under regularity conditions).","hint":"Invariance does not hold for unbiasedness.","page":null},{"id":"k_mt3507_4_3","type":"definition","label":"Unbiased and consistent","front":"When is an estimator unbiased, and when is it consistent?","back":"Unbiased if $E[\\hat\\theta(\\mathbf X)]=\\theta$.\nConsistent if $E[\\hat\\theta(\\mathbf X_n)]\\to\\theta$ and $\\operatorname{Var}[\\hat\\theta(\\mathbf X_n)]\\to0$ as $n\\to\\infty$.","hint":"","page":null},{"id":"k_mt3507_4_4","type":"definition","label":"Definition 4.2","front":"Define the (expected) Fisher information matrix $I_n(\\boldsymbol\\theta)$.","back":"The matrix with $ij$th element $$-E\\left[\\frac{\\partial^2\\ell}{\\partial\\theta_i\\partial\\theta_j}\\right],$$ where $\\ell=\\ell(\\boldsymbol\\theta;\\mathbf X)$ is the log-likelihood for a sample of size $n$.","hint":"","page":null},{"id":"k_mt3507_4_5","type":"result","label":"Large-sample distribution (4.3)","front":"What is the approximate distribution of the MLE for large $n$?","back":"$$\\hat{\\boldsymbol\\theta}-\\boldsymbol\\theta\\ \\dot\\sim\\ N\\left(\\mathbf 0,\\ I_n(\\boldsymbol\\theta)^{-1}\\right).$$","hint":"","page":null},{"id":"k_mt3507_4_6","type":"theorem","label":"Fisher's factorisation theorem","front":"State Fisher's factorisation theorem.","back":"$T(\\mathbf x)$ are jointly sufficient statistics for $\\boldsymbol\\theta$ if and only if the likelihood factorises as $$L(\\boldsymbol\\theta;\\mathbf x)=h(\\mathbf x)\\,g(\\boldsymbol\\theta;T(\\mathbf x))$$ for appropriate functions $h$ and $g$.","hint":"Sufficient statistics are not unique.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_5":{"id":"c_mt3507_5","moduleId":"m_mt3507","title":"5. Interval estimation","start":45,"end":50,"order":5,"cards":[{"id":"k_mt3507_5_1","type":"equation","label":"Equation (5.1)","front":"Give the approximate 95% confidence interval for $\\theta_i$ from the asymptotic distribution of the MLE.","back":"$$\\hat\\theta_i\\pm1.96\\sqrt{1/I_n(\\hat\\theta_i)}.$$","hint":"","page":null},{"id":"k_mt3507_5_2","type":"result","label":"Fisher information under reparametrisation","front":"If $\\phi=g(\\theta)$ with differentiable inverse $\\theta=h(\\phi)$, what is $I_n(\\phi)$?","back":"$$I_n(\\phi)=\\left(\\frac{dh(\\phi)}{d\\phi}\\right)^2I_n(h(\\phi)).$$","hint":"","page":null},{"id":"k_mt3507_5_3","type":"definition","label":"Definition 5.1","front":"Define the relative likelihood function $R(\\theta)$.","back":"If $L(\\theta)$ is maximised at $\\hat\\theta$, $$R(\\theta)=\\frac{L(\\theta)}{L(\\hat\\theta)},$$ so $R(\\hat\\theta)=1$ and $0<R(\\theta)\\leq1$.","hint":"","page":null},{"id":"k_mt3507_5_4","type":"definition","label":"Definition 5.2","front":"Define a $100\\gamma\\%$ likelihood region for $\\theta$.","back":"$\\{\\theta:R(\\theta)\\geq\\gamma\\}$; when this is an interval it is a $100\\gamma\\%$ likelihood interval.","hint":"","page":null},{"id":"k_mt3507_5_5","type":"definition","label":"Definition 5.3","front":"Define the likelihood ratio statistic $W(\\theta)$ and its approximate distribution.","back":"$$W(\\theta)=-2r(\\theta)=-2\\log R(\\theta)=-2\\log\\left(\\frac{L(\\theta)}{L(\\hat\\theta)}\\right).$$ For one-dimensional $\\theta$, $W(\\theta)\\ \\dot\\sim\\ \\chi^2_1$ for large samples (under regularity conditions).","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_6":{"id":"c_mt3507_6","moduleId":"m_mt3507","title":"6. Hypothesis testing","start":51,"end":60,"order":6,"cards":[{"id":"k_mt3507_6_1","type":"equation","label":"Binomial dispersion test (6.5)","front":"Give the dispersion test statistic for $H_0$: $X_1,\\dots,X_k\\sim\\mathrm{Bin}(n,p)$, and its approximate null distribution.","back":"With $\\hat p=\\bar x/n$: $$\\frac{\\sum_{i=1}^k(x_i-n\\hat p)^2}{n\\hat p(1-\\hat p)}\\ \\dot\\sim\\ \\chi^2_{k-1}.$$","hint":"Close to $k-1$ under $H_0$; much larger or smaller suggests the data are not binomial.","page":null},{"id":"k_mt3507_6_2","type":"equation","label":"Poisson dispersion test","front":"Give the dispersion test statistic for $H_0$: $X_1,\\dots,X_n\\sim\\mathrm{Poisson}(\\lambda)$.","back":"$$\\frac{\\sum_{i=1}^n(x_i-\\bar x)^2}{\\bar x}\\ \\dot\\sim\\ \\chi^2_{n-1}.$$","hint":"Under $H_0$ the sample mean and sample variance both estimate $\\lambda$.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_7":{"id":"c_mt3507_7","moduleId":"m_mt3507","title":"7. Bayesian inference","start":61,"end":69,"order":7,"cards":[{"id":"k_mt3507_7_1","type":"theorem","label":"Theorem 7.1 (Bayes' Theorem)","front":"State Bayes' Theorem for the posterior of a continuous parameter $\\theta$.","back":"$$\\pi(\\theta\\mid x)=\\frac{\\pi(\\theta)f(x\\mid\\theta)}{f(x)}=\\frac{\\pi(\\theta)f(x\\mid\\theta)}{\\int_\\Theta\\pi(\\theta)f(x\\mid\\theta)\\,d\\theta}.$$","hint":"","page":null},{"id":"k_mt3507_7_2","type":"definition","label":"Definition 7.1","front":"Define an $(r,k)$ exponential family.","back":"A family $\\{f(x\\mid\\theta):\\theta\\in\\Theta\\}$ with $\\Theta\\subseteq\\mathbb R^k$ and $$f(x\\mid\\theta)=a(x)b(\\theta)\\exp\\left[\\sum_{i=1}^rc_i(\\theta)T_i(x)\\right]$$ for all $\\theta\\in\\Theta$.","hint":"","page":null},{"id":"k_mt3507_7_3","type":"definition","label":"Definition 7.2","front":"Define a $100(1-\\alpha)\\%$ central posterior interval $(a,b)$.","back":"$$\\int_{-\\infty}^a\\pi(\\theta\\mid x)\\,d\\theta=\\frac\\alpha2=\\int_b^\\infty\\pi(\\theta\\mid x)\\,d\\theta.$$","hint":"","page":null},{"id":"k_mt3507_7_4","type":"definition","label":"Definition 7.3","front":"Define a $100(1-\\alpha)\\%$ highest posterior density interval $(a,b)$.","back":"(i) $\\int_a^b\\pi(\\theta\\mid x)\\,d\\theta=1-\\alpha$, and\n(ii) for any $\\theta_1\\in(a,b)$ and $\\theta_2\\notin(a,b)$, $\\pi(\\theta_1\\mid x)\\geq\\pi(\\theta_2\\mid x)$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3507_8":{"id":"c_mt3507_8","moduleId":"m_mt3507","title":"8. The general linear model","start":70,"end":78,"order":8,"cards":[{"id":"k_mt3507_8_1","type":"equation","label":"Normal equations","front":"State the normal equations and the least squares estimator in $\\mathbf y=X\\boldsymbol\\beta+\\boldsymbol\\epsilon$.","back":"$$X^{\\mathsf T}X\\hat{\\boldsymbol\\beta}=X^{\\mathsf T}\\mathbf y,$$ so if $X^{\\mathsf T}X$ has full rank, $$\\hat{\\boldsymbol\\beta}=(X^{\\mathsf T}X)^{-1}X^{\\mathsf T}\\mathbf y.$$","hint":"With $\\boldsymbol\\epsilon\\sim N(\\mathbf 0,\\sigma^2I)$ the MLE and least squares estimator of $\\boldsymbol\\beta$ coincide.","page":null},{"id":"k_mt3507_8_2","type":"result","label":"Variance of $A\\mathbf y$","front":"For independent $\\mathbf y$ with constant variance $\\sigma^2$, what is $\\operatorname{Var}(A\\mathbf y)$?","back":"$$\\operatorname{Var}(A\\mathbf y)=A\\operatorname{Var}(\\mathbf y)A^{\\mathsf T}=\\sigma^2AA^{\\mathsf T}.$$","hint":"","page":null},{"id":"k_mt3507_8_3","type":"definition","label":"Definition 8.1","front":"Define the AIC of a model with $p$ free parameters.","back":"$$\\mathrm{AIC}=-2\\log L(\\hat{\\boldsymbol\\theta})+2p.$$ The model with the lowest AIC is preferred.","hint":"","page":null},{"id":"k_mt3507_8_4","type":"definition","label":"Definition 8.2","front":"Define the AICc.","back":"$$\\mathrm{AICc}=\\mathrm{AIC}+\\frac{2p(p+1)}{n-p-1}.$$","hint":"","page":null},{"id":"k_mt3507_8_5","type":"definition","label":"Definition 8.3","front":"Define the BIC and compare its penalty with AIC.","back":"$$\\mathrm{BIC}=-2\\log L(\\hat{\\boldsymbol\\theta})+p\\log n.$$ When $\\log n>2$ (i.e. $n>7.4$), BIC penalises parameters more than AIC, so it favours smaller models.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3504_1":{"id":"c_mt3504_1","moduleId":"m_mt3504","title":"1. First-order ordinary differential equations","start":4,"end":26,"order":1,"cards":[{"id":"k_mt3504_1_1","type":"result","label":"Linear equations","front":"How do you solve the linear ODE $\\dfrac{dy}{dx}+p(x)y=q(x)$?","back":"Integrating factor $\\mu=\\exp\\left(\\int p(x)\\,dx\\right)$. Multiply through so that $$\\frac{d}{dx}\\big(y(x)\\mu(x)\\big)=\\mu(x)q(x),$$ then integrate.","hint":"","page":null},{"id":"k_mt3504_1_2","type":"result","label":"Separable equations","front":"How do you solve $\\dfrac{dy}{dx}=f(x)g(y)$?","back":"Separate and integrate: $$\\int\\frac{1}{g(y)}\\,dy=\\int f(x)\\,dx.$$","hint":"","page":null},{"id":"k_mt3504_1_3","type":"result","label":"Bernoulli equations","front":"How do you solve the Bernoulli equation $\\dfrac{dy}{dx}+p(x)y=q(x)y^n$?","back":"Substitute $v(x)=y^{1-n}$. This gives a linear ODE for $v$; solve it and substitute back for $y$.","hint":"","page":null},{"id":"k_mt3504_1_4","type":"result","label":"Homogeneous equations","front":"How do you solve $\\dfrac{dy}{dx}=F\\left(\\dfrac yx\\right)$?","back":"Substitute $y(x)=xv(x)$. This gives a separable ODE for $v$; solve it and substitute back for $y$.","hint":"","page":null},{"id":"k_mt3504_1_5","type":"theorem","label":"Theorem 1.12","front":"State the condition for $M(x,y)$, $N(x,y)$ to come from a potential $F$ (exactness).","back":"$$\\frac{\\partial M}{\\partial y}=\\frac{\\partial N}{\\partial x}$$ if and only if there exists $F(x,y)$ with $\\dfrac{\\partial F}{\\partial x}=M$ and $\\dfrac{\\partial F}{\\partial y}=N$.","hint":"","page":null},{"id":"k_mt3504_1_6","type":"result","label":"Exact equations","front":"How do you solve the exact equation $M(x,y)+N(x,y)\\dfrac{dy}{dx}=0$?","back":"Check $\\dfrac{\\partial M}{\\partial y}=\\dfrac{\\partial N}{\\partial x}$. Find $F$ from $F=\\int M\\,dx$ and $F=\\int N\\,dy$ (matching the arbitrary functions). The solution is $$F(x,y)=\\text{constant}.$$","hint":"","page":null},{"id":"k_mt3504_1_7","type":"theorem","label":"Theorem 1.20 (Existence and uniqueness of solutions to first order IVPs)","front":"State the existence and uniqueness theorem for $y'=f(x,y)$, $y(x_0)=y_0$.","back":"Suppose $f$ and $\\partial f/\\partial y$ are continuous on the closed rectangle $R$: $x_0-a\\leq x\\leq x_0+a$, $y_0-b\\leq y\\leq y_0+b$. Then for some $0<\\alpha\\leq a$ there is a unique solution $y(x)$ of $y'=f(x,y)$, $y(x_0)=y_0$ on $|x-x_0|\\leq\\alpha$. If $K<\\infty$ bounds $|f|$ on $R$, then $\\alpha=\\min(a,b/K)$.","hint":"Proof by Picard iteration: the map is a contraction, so the iterates converge to a unique fixed point.","page":null},{"id":"k_mt3504_1_8","type":"equation","label":"Picard iteration","front":"Write down the integral form of the IVP $y'=f(x,y)$, $y(x_0)=y_0$ and the Picard iteration.","back":"$$y(x)=y_0+\\int_{x_0}^xf(s,y(s))\\,ds,$$ $$y_{n+1}(x)=y_0+\\int_{x_0}^xf(s,y_n(s))\\,ds.$$","hint":"","page":null},{"id":"k_mt3504_1_9","type":"proposition","label":"Proposition 1.23","front":"What can you say about a function continuous everywhere on a closed domain?","back":"It is bounded.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3504_2":{"id":"c_mt3504_2","moduleId":"m_mt3504","title":"2. Second-order ordinary differential equations","start":27,"end":48,"order":2,"cards":[{"id":"k_mt3504_2_1","type":"definition","label":"Wronskian","front":"Define the Wronskian $W[y_1,y_2]$ and say what it tells you about linear independence.","back":"$$W[y_1,y_2]=\\det\\begin{pmatrix}y_1&y_2\\\\y_1'&y_2'\\end{pmatrix}.$$ $y_1,y_2$ linearly dependent $\\Rightarrow W=0$, so $W\\neq0\\Rightarrow$ linearly independent.","hint":"Careful: $W[y_1,y_2]=0$ does not imply linear dependence.","page":null},{"id":"k_mt3504_2_2","type":"result","label":"Constant coefficients","front":"Give the general solution of $ay''+by'+cy=0$ for each type of root of $a\\lambda^2+b\\lambda+c=0$.","back":"$\\lambda_1\\neq\\lambda_2$ real: $y=Ae^{\\lambda_1x}+Be^{\\lambda_2x}$\n$\\lambda_1=\\lambda_2$: $y=(A+Bx)e^{\\lambda_1x}$\n$\\lambda=\\alpha\\pm i\\beta$: $y=e^{\\alpha x}(A\\cos\\beta x+B\\sin\\beta x)$","hint":"","page":null},{"id":"k_mt3504_2_3","type":"result","label":"Equidimensional equations","front":"How do you solve $x^2y''+axy'+by=0$, and what are the solutions?","back":"Substitute $z=\\ln x$; auxiliary equation $\\lambda^2+(a-1)\\lambda+b=0$.\n$\\lambda_1\\neq\\lambda_2$ real: $y=Ax^{\\lambda_1}+Bx^{\\lambda_2}$\n$\\lambda_1=\\lambda_2$: $y=(A+B\\ln x)x^{\\lambda_1}$\n$\\lambda=\\alpha\\pm i\\beta$: $y=x^\\alpha\\big(A\\cos(\\beta\\ln x)+B\\sin(\\beta\\ln x)\\big)$","hint":"","page":null},{"id":"k_mt3504_2_4","type":"result","label":"Reduction of order","front":"Given one solution $y_1$ of $y''+p(x)y'+q(x)y=0$, how do you find a second?","back":"Try $y_2=v(x)y_1(x)$. Substituting and cancelling (since $y_1$ is a solution) leaves a first-order ODE in $V=v'(x)$; solve for $v$ and hence $y_2$.","hint":"","page":null},{"id":"k_mt3504_2_5","type":"result","label":"Variation of parameters","front":"How does variation of parameters find a particular integral of $y''+p(x)y'+q(x)y=g(x)$?","back":"With $y_1,y_2$ independent solutions of the homogeneous equation, seek $y_{PI}=u_1y_1+u_2y_2$ where $$\\begin{pmatrix}y_1&y_2\\\\y_1'&y_2'\\end{pmatrix}\\begin{pmatrix}u_1'\\\\u_2'\\end{pmatrix}=\\begin{pmatrix}0\\\\g(x)\\end{pmatrix}.$$","hint":"The extra condition imposed is $u_1'y_1+u_2'y_2=0$.","page":null},{"id":"k_mt3504_2_6","type":"result","label":"Green's function for a BVP","front":"How do you build the Green's function for $a_2y''+a_1y'+a_0y=g(x)$, $y(a)=y(b)=0$?","back":"Take independent homogeneous solutions with $y_1(a)=0$, $y_2(b)=0$ and set $$G(x,s)=\\begin{cases}A(s)y_1(x),&x<s\\\\B(s)y_2(x),&x>s.\\end{cases}$$ Find $A,B$ from continuity of $G$ at $x=s$ and the jump condition $$\\left.\\frac{\\partial G}{\\partial x}\\right|_{x=s^+}-\\left.\\frac{\\partial G}{\\partial x}\\right|_{x=s^-}=\\frac{1}{a_2(s)}.$$","hint":"Then $y(x)=\\int_a^bG(x,s)g(s)\\,ds$.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3504_3":{"id":"c_mt3504_3","moduleId":"m_mt3504","title":"3. Fourier series","start":49,"end":71,"order":3,"cards":[{"id":"k_mt3504_3_1","type":"definition","label":"Definition 3.1","front":"Give the Fourier series of $f:[-l,l)\\to\\mathbb R$ and its coefficients.","back":"$$S(x)=\\frac{a_0}{2}+\\sum_{n=1}^\\infty\\left(a_n\\cos\\frac{n\\pi x}{l}+b_n\\sin\\frac{n\\pi x}{l}\\right),$$ $$a_n=\\frac1l\\int_{-l}^lf(x)\\cos\\frac{n\\pi x}{l}\\,dx,\\qquad b_n=\\frac1l\\int_{-l}^lf(x)\\sin\\frac{n\\pi x}{l}\\,dx.$$","hint":"$a_0/2$ is the average value of $f$ on $[-l,l)$.","page":null},{"id":"k_mt3504_3_2","type":"result","label":"Discontinuities","front":"What value does the Fourier series take at a jump discontinuity $x_0$?","back":"The average of the values either side: $$S(x_0)=\\tfrac12\\big(f(x_0^-)+f(x_0^+)\\big).$$","hint":"","page":null},{"id":"k_mt3504_3_3","type":"result","label":"Odd and even functions","front":"Which Fourier coefficients vanish for even and for odd functions, and how do you compute the rest?","back":"Even ($f(-x)=f(x)$): $b_n=0$, $S(x)=\\frac{a_0}2+\\sum a_n\\cos\\frac{n\\pi x}l$ with $a_n=\\frac2l\\int_0^lf(x)\\cos\\frac{n\\pi x}l\\,dx$.\nOdd ($f(-x)=-f(x)$): $a_n=0$, $S(x)=\\sum b_n\\sin\\frac{n\\pi x}l$ with $b_n=\\frac2l\\int_0^lf(x)\\sin\\frac{n\\pi x}l\\,dx$.","hint":"","page":null},{"id":"k_mt3504_3_4","type":"equation","label":"Complex Fourier series","front":"Write the complex form of the Fourier series and relate $c_n$ to $a_n,b_n$.","back":"$$S(x)=\\sum_{n=-\\infty}^\\infty c_ne^{in\\pi x/l},$$ with $c_0=\\dfrac{a_0}2$, $c_n=\\dfrac{a_n-ib_n}{2}$, $c_{-n}=\\dfrac{a_n+ib_n}{2}$ for $n>0$.","hint":"","page":null},{"id":"k_mt3504_3_5","type":"theorem","label":"Parseval's theorem","front":"State Parseval's theorem.","back":"$$\\int_{-l}^l|f|^2\\,dx=l\\left(\\frac{a_0^2}{2}+\\sum_{n=1}^\\infty\\left(|a_n|^2+|b_n|^2\\right)\\right).$$","hint":"","page":null},{"id":"k_mt3504_3_6","type":"equation","label":"Product–sum identities","front":"Give the product–sum formulas for $\\sin x\\sin y$, $\\cos x\\cos y$ and $\\sin x\\cos y$.","back":"$\\sin x\\sin y=\\frac12[\\cos(x-y)-\\cos(x+y)]$\n$\\cos x\\cos y=\\frac12[\\cos(x-y)+\\cos(x+y)]$\n$\\sin x\\cos y=\\frac12[\\sin(x+y)+\\sin(x-y)]$","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3504_4":{"id":"c_mt3504_4","moduleId":"m_mt3504","title":"4. Separation of variables for PDEs","start":72,"end":89,"order":4,"cards":[{"id":"k_mt3504_4_1","type":"equation","label":"Wave equation","front":"Give the series solution of $u_{xx}=u_{tt}$ on $0<x<1$ with $u=0$ at $x=0,1$.","back":"$$u(x,t)=\\sum_{n=1}^\\infty(A_n\\cos n\\pi t+B_n\\sin n\\pi t)\\sin n\\pi x.$$","hint":"","page":null},{"id":"k_mt3504_4_2","type":"equation","label":"Heat equation","front":"Give the series solution of $v_t-Kv_{xx}=0$ with $v(0,t)=0$, $v_x(1,t)=0$.","back":"$$v(x,t)=\\sum_{n=1}^\\infty A_n\\sin(k_nx)e^{-k_n^2Kt},\\qquad k_n=\\frac{(2n-1)\\pi}{2}.$$","hint":"","page":null},{"id":"k_mt3504_4_3","type":"definition","label":"Sturm–Liouville problem","front":"What is a Sturm–Liouville problem?","back":"A second-order linear ODE $L[y]=\\lambda w(x)y$ on $a\\leq x\\leq b$ with $$L=-\\frac{d}{dx}\\left(p(x)\\frac{d}{dx}\\right)+q(x),$$ where $w(x)>0$ on $[a,b]$ and $p(x)>0$ on $(a,b)$, subject to suitable boundary conditions.","hint":"","page":null},{"id":"k_mt3504_4_4","type":"theorem","label":"Theorem 4.3","front":"What can you say about the eigenvalues of a Sturm–Liouville problem?","back":"The eigenvalues $\\lambda$ for which there are nontrivial solutions are real.","hint":"Compare $L[y]=\\lambda wy$ with its complex conjugate and use self-adjointness of $L$.","page":null},{"id":"k_mt3504_4_5","type":"theorem","label":"Theorem 4.4","front":"How are Sturm–Liouville eigenfunctions for distinct eigenvalues related?","back":"Eigenfunctions $y_n,y_m$ for distinct eigenvalues $\\lambda_n\\neq\\lambda_m$ are orthogonal with respect to the weight $w(x)$: $$\\int_a^bw(x)y_n(x)y_m(x)\\,dx=0.$$","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt3504_5":{"id":"c_mt3504_5","moduleId":"m_mt3504","title":"5. First- and second-order PDEs","start":90,"end":100,"order":5,"cards":[{"id":"k_mt3504_5_1","type":"result","label":"Quasilinear first-order PDEs","front":"How do you solve the quasilinear PDE $au_x+bu_y=c$?","back":"Solve the characteristic ODEs $$\\frac{dx}{a}=\\frac{dy}{b}=\\frac{du}{c}=ds,$$ i.e. $\\dfrac{dx}{ds}=a(x,y,u)$, $\\dfrac{dy}{ds}=b(x,y,u)$, $\\dfrac{du}{ds}=c(x,y,u)$.","hint":"","page":null},{"id":"k_mt3504_5_2","type":"result","label":"Classification of second-order PDEs","front":"Classify $au_{xx}+2bu_{xy}+cu_{yy}=F$.","back":"$b^2>ac$: hyperbolic (two families of real characteristics);\n$b^2=ac$: parabolic (one family);\n$b^2<ac$: elliptic (no real characteristics).","hint":"If $a,b,c$ depend on $(x,y)$ the type can change from point to point.","page":null},{"id":"k_mt3504_5_3","type":"equation","label":"Characteristic equations","front":"Give the characteristic equations for $au_{xx}+2bu_{xy}+cu_{yy}=F$.","back":"$$\\frac{dy}{dx}=\\frac{b+\\sqrt{b^2-ac}}{a},\\qquad\\frac{dy}{dx}=\\frac{b-\\sqrt{b^2-ac}}{a},$$ each giving a family of characteristic curves.","hint":"","page":null},{"id":"k_mt3504_5_4","type":"theorem","label":"Theorem 5.14","front":"What is the canonical form of the constant-coefficient hyperbolic PDE $au_{xx}+2bu_{xy}+cu_{yy}=0$?","back":"With $b^2-ac>0$, the change of variables $$\\xi=y-\\frac{b-\\sqrt{b^2-ac}}{a}x,\\qquad\\eta=y-\\frac{b+\\sqrt{b^2-ac}}{a}x$$ reduces it to $u_{\\xi\\eta}=0$.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt4514_1":{"id":"c_mt4514_1","moduleId":"m_mt4514","title":"2. Graph theory basics","start":6,"end":15,"order":1,"cards":[{"id":"k_mt4514_1_1","type":"definition","label":"Definition 1.1","front":"Define a graph $G=(V,E)$.","back":"A set $V$ and a set $E$ of two-element subsets of $V$. The elements of $V$ are vertices and the elements of $E$ are edges.","hint":"","page":null},{"id":"k_mt4514_1_2","type":"definition","label":"Definition 1.3","front":"What are a loop and multiple edges?","back":"A loop is an edge joining a vertex to itself. A graph has multiple edges if there exist two vertices with more than one edge between them.","hint":"","page":null},{"id":"k_mt4514_1_3","type":"definition","label":"Definition 1.4","front":"What is a simple graph?","back":"A finite undirected graph without loops or multiple edges.","hint":"In this course, graphs are simple unless otherwise stated.","page":null},{"id":"k_mt4514_1_4","type":"definition","label":"Definition 1.6","front":"Define the complement $\\overline G$ of a graph $G$.","back":"$\\overline G$ has the same vertex set $V(G)$, and $uv\\in E(\\overline G)$ if and only if $uv\\notin E(G)$. So edges of $G$ correspond to non-edges of $\\overline G$.","hint":"","page":null},{"id":"k_mt4514_1_5","type":"definition","label":"Definition 1.8","front":"Define $N(v)$, $\\deg(v)$, $\\delta(G)$, $\\Delta(G)$, and isolated and pendant vertices.","back":"$N(v)=\\{u\\in V(G):uv\\in E(G)\\}$ is the neighbourhood of $v$, and $\\deg(v)=|N(v)|$ is the number of edges incident to $v$.\n$\\delta(G)$ is the minimum degree and $\\Delta(G)$ the maximum degree of a vertex in $G$.\n$v$ is isolated if $\\deg(v)=0$ and pendant if $\\deg(v)=1$.","hint":"","page":null},{"id":"k_mt4514_1_6","type":"definition","label":"Definition 1.12","front":"Define the adjacency matrix $A(G)$ of a graph with vertices $p_1,\\dots,p_n$.","back":"The $n\\times n$ matrix with $$a_{ij}=\\begin{cases}1&\\text{if }p_ip_j\\text{ is an edge}\\\\0&\\text{otherwise.}\\end{cases}$$","hint":"","page":null},{"id":"k_mt4514_1_7","type":"theorem","label":"Theorem 1.14","front":"State the two properties of the adjacency matrix $A$ of a (simple) graph.","back":"(i) $A$ is symmetric with $0$s on the diagonal and $0$ or $1$ elsewhere.\n(ii) The sum of the entries in the $i$th row (or column) equals $\\deg(p_i)$.","hint":"","page":null},{"id":"k_mt4514_1_8","type":"definition","label":"Definition 2.1","front":"When are graphs $G_1$ and $G_2$ isomorphic?","back":"If there is a bijection $\\phi:V(G_1)\\to V(G_2)$ such that $xy\\in E(G_1)$ if and only if $\\phi(x)\\phi(y)\\in E(G_2)$, i.e. a bijection preserving adjacency. We write $G_1\\cong G_2$.","hint":"Isomorphic graphs have the same numbers of vertices and edges, and corresponding vertices have equal degrees.","page":null},{"id":"k_mt4514_1_9","type":"definition","label":"Definition 3.1","front":"When is $H$ a subgraph of $G$?","back":"If there is a graph $H'\\cong H$ with $V(H')\\subseteq V(G)$ and $E(H')\\subseteq E(G)$. We write $H\\subseteq G$.","hint":"","page":null},{"id":"k_mt4514_1_10","type":"definition","label":"Definition 3.2","front":"Describe the four operations: removing a vertex, removing an edge, suppressing a vertex, contracting an edge.","back":"Removing $v$: delete $v$ and all edges incident with it.\nRemoving $e$: delete $e$ from $E$.\nSuppressing a degree-2 vertex $v$: delete $v$ and replace its two incident edges by a single edge.\nContracting $e=uv$: remove $u,v$ and add a new vertex $z$ adjacent to every vertex that was adjacent to $u$ or $v$.","hint":"","page":null},{"id":"k_mt4514_1_11","type":"definition","label":"Definition 3.3","front":"Define induced subgraph, subgraph, topological minor and minor in terms of operations.","back":"$H$ is obtained from $G$ by a sequence of:\ninduced subgraph: vertex removals;\nsubgraph: vertex and edge removals;\ntopological minor: vertex removals, edge removals and suppressions of degree-2 vertices;\nminor: vertex removals, edge removals and edge contractions.","hint":"Each implies the next: induced subgraph ⇒ subgraph ⇒ topological minor ⇒ minor.","page":null},{"id":"k_mt4514_1_12","type":"definition","label":"Definitions 4.1–4.3","front":"Give the numbers of vertices and edges of $P_n$, $C_n$ and $K_n$.","back":"$P_n$: $n$ vertices, $n-1$ edges (length $n-1$).\n$C_n$ ($n\\geq3$): $n$ vertices, $n$ edges (length $n$).\n$K_n$: $n$ vertices, $\\binom n2=n(n-1)/2$ edges; every vertex has degree $n-1$.","hint":"","page":null},{"id":"k_mt4514_1_13","type":"definition","label":"Definition 4.5","front":"Define a bipartite graph and the complete bipartite graph $K_{m,n}$.","back":"$G$ is bipartite if there is a partition $V(G)=R\\cup B$ such that every edge has one end in $R$ and one in $B$.\n$K_{m,n}$ has $|R|=m$, $|B|=n$, every vertex of $R$ adjacent to every vertex of $B$, and no edges inside $R$ or $B$; it has $mn$ edges.","hint":"","page":null},{"id":"k_mt4514_1_14","type":"definition","label":"Definitions 5.1, 5.2","front":"Define the degree sequence of $G$ and a $d$-regular graph.","back":"The degree sequence is the list of vertex degrees, usually in decreasing order. $G$ is regular if all vertices have the same degree, and $d$-regular if that degree is $d$.","hint":"Non-isomorphic graphs can have the same degree sequence.","page":null},{"id":"k_mt4514_1_15","type":"theorem","label":"Theorem 5.3","front":"What eigenvalue must the adjacency matrix of a $d$-regular graph have?","back":"$d$ is an eigenvalue of $A$, with eigenvector $(1,\\dots,1)^{\\mathsf T}$.","hint":"Every row of $A$ sums to $d$.","page":null},{"id":"k_mt4514_1_16","type":"proposition","label":"Proposition 5.5 (Handshaking Lemma)","front":"State the Handshaking Lemma.","back":"For a graph $G=(V,E)$, $$\\sum_{v\\in V(G)}\\deg(v)=2|E(G)|.$$ In particular the sum of the degrees is even.","hint":"Double-count pairs $(v,e)$ with $v\\in e$.","page":null},{"id":"k_mt4514_1_17","type":"corollary","label":"Corollary 5.6","front":"What does the Handshaking Lemma imply about vertices of odd degree?","back":"In every graph, the number of vertices of odd degree is even.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt4514_2":{"id":"c_mt4514_2","moduleId":"m_mt4514","title":"3. Connectivity and paths","start":16,"end":23,"order":2,"cards":[{"id":"k_mt4514_2_1","type":"definition","label":"Definitions 1.1–1.3","front":"Define a walk, a path, a closed walk, a cycle and length.","back":"A walk is a sequence $v_1,\\dots,v_n$ with $v_iv_{i+1}\\in E(G)$; a path is a walk with all vertices distinct.\nA closed walk has $v_1=v_n$; a cycle is a closed walk with $n\\geq3$ whose vertices are distinct except $v_1=v_n$.\nLength is the number of edges.","hint":"","page":null},{"id":"k_mt4514_2_2","type":"proposition","label":"Proposition 1.5","front":"What does every walk from $u$ to $v$ contain?","back":"A path between $u$ and $v$.","hint":"Strong induction on length: if $u_i=u_j$ with $i<j$, cut out the closed section.","page":null},{"id":"k_mt4514_2_3","type":"proposition","label":"Proposition 1.6","front":"What length of path is guaranteed by minimum degree $\\delta(G)\\geq2$?","back":"$G$ contains a path of length at least $\\delta(G)$.","hint":"Take a maximal path $v_1\\dots v_k$; all neighbours of $v_1$ lie on it, so $k-1\\geq\\delta(G)$.","page":null},{"id":"k_mt4514_2_4","type":"proposition","label":"Proposition 1.7","front":"What does the $(i,j)$ entry of $A^k$ count?","back":"The number of walks of length $k$ from $p_i$ to $p_j$.","hint":"Induction: $(A^{m+1})_{ij}=\\sum_\\ell (A^m)_{i\\ell}a_{\\ell j}$.","page":null},{"id":"k_mt4514_2_5","type":"definition","label":"Definition 2.1","front":"When is a graph connected, and what are its connected components?","back":"$G$ is connected if for each pair of distinct vertices $u,v$ there is a path from $u$ to $v$. Otherwise it is disconnected, and is a disjoint union of connected graphs called its connected components.","hint":"","page":null},{"id":"k_mt4514_2_6","type":"proposition","label":"Proposition 2.3","front":"Give a lower bound on the number of components of a graph with $n$ vertices and $m$ edges.","back":"At least $n-m$ connected components.","hint":"Start from the empty graph ($n$ components); each added edge reduces the count by at most one.","page":null},{"id":"k_mt4514_2_7","type":"corollary","label":"Corollary 2.4","front":"How many edges must a connected graph on $n$ vertices have?","back":"At least $n-1$.","hint":"","page":null},{"id":"k_mt4514_2_8","type":"definition","label":"Definition 3.1","front":"Define a trail, an Eulerian trail and tour, and semi-Eulerian and Eulerian graphs.","back":"A trail is a walk with all edges distinct. An Eulerian trail uses each edge exactly once; if closed it is an Eulerian tour.\nA connected graph is semi-Eulerian if it has an Eulerian trail, and Eulerian if it has an Eulerian tour.","hint":"","page":null},{"id":"k_mt4514_2_9","type":"theorem","label":"Theorem 3.3 (Euler's Theorem)","front":"State Euler's Theorem.","back":"A connected graph is Eulerian if and only if every vertex has even degree.","hint":"⇐: a maximal trail is closed (Lemma 3.4); if it missed an edge, connectivity lets you extend it.","page":null},{"id":"k_mt4514_2_10","type":"lemma","label":"Lemma 3.4","front":"In a graph where all degrees are even, what can you say about a maximal trail?","back":"Every maximal (non-extendable) trail is a closed trail.","hint":"","page":null},{"id":"k_mt4514_2_11","type":"corollary","label":"Corollary 3.5","front":"When is a connected graph semi-Eulerian but not Eulerian?","back":"If and only if it has exactly two vertices of odd degree.","hint":"Add an edge between the two odd vertices, find an Euler tour, then remove it.","page":null},{"id":"k_mt4514_2_12","type":"result","label":"Algorithm 3.8 (Fleury's algorithm)","front":"Describe Fleury's algorithm.","back":"(1) Start at any vertex (Eulerian case) or at one of the two odd-degree vertices (semi-Eulerian case).\n(2) At each step traverse an unused edge from the current vertex, not choosing a bridge unless there is no alternative; erase used edges and any isolated vertices.\n(3) When you can't continue, the tour or trail is complete.","hint":"","page":null},{"id":"k_mt4514_2_13","type":"definition","label":"Definition 3.10","front":"Define Hamiltonian path and cycle, and semi-Hamiltonian and Hamiltonian graphs.","back":"A Hamiltonian path contains all vertices of $G$; a Hamiltonian cycle is a cycle containing every vertex.\nA connected graph is semi-Hamiltonian if it has a Hamiltonian path, and Hamiltonian if it has a Hamiltonian cycle.","hint":"","page":null},{"id":"k_mt4514_2_14","type":"lemma","label":"Lemma 3.12","front":"Give the necessary condition on $G-S$ for $G$ to have a Hamiltonian cycle.","back":"If $G$ has a Hamiltonian cycle then, for each $S\\subset V(G)$, the graph $G-S$ has at most $|S|$ connected components.","hint":"","page":null},{"id":"k_mt4514_2_15","type":"corollary","label":"Corollary 3.13","front":"If a connected bipartite graph with bipartition $A\\cup B$ is Hamiltonian, what must hold?","back":"$|A|=|B|$.","hint":"So $K_{3,4}$ is not Hamiltonian.","page":null},{"id":"k_mt4514_2_16","type":"theorem","label":"Theorem 3.14 (Dirac's theorem)","front":"State Dirac's theorem.","back":"Let $G$ be a graph with $n\\geq3$ vertices such that every vertex has degree at least $n/2$. Then $G$ has a Hamiltonian cycle.","hint":"Take a longest path $v_1\\dots v_r$; degree counting gives $v_i$ with $v_iv_r$, $v_{i+1}v_1\\in E$, making a cycle, which must be Hamiltonian.","page":null},{"id":"k_mt4514_2_17","type":"theorem","label":"Theorem 3.16 (Ore's Theorem)","front":"State Ore's Theorem.","back":"Let $G$ be a graph with $n\\geq3$ vertices such that for all non-adjacent $v,w$, $\\deg(v)+\\deg(w)\\geq n$. Then $G$ has a Hamiltonian circuit.","hint":"","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt4514_3":{"id":"c_mt4514_3","moduleId":"m_mt4514","title":"4. Trees","start":24,"end":31,"order":3,"cards":[{"id":"k_mt4514_3_1","type":"definition","label":"Definition 1.1","front":"Define acyclic, forest, tree and leaf.","back":"A graph with no cycles is acyclic; an acyclic graph is a forest; a connected acyclic graph is a tree. In a tree or forest a leaf is a vertex of degree one.","hint":"","page":null},{"id":"k_mt4514_3_2","type":"lemma","label":"Lemma 1.2","front":"State the two facts about leaves of a finite tree.","back":"(i) A finite tree with at least two vertices has at least two leaves.\n(ii) Deleting a leaf from an $n$-vertex tree gives an $(n-1)$-vertex tree.","hint":"The endpoints of a maximal path are leaves.","page":null},{"id":"k_mt4514_3_3","type":"definition","label":"Definition 1.3","front":"What is a cut-edge?","back":"An edge of a graph whose deletion disconnects the graph (called a bridge in Fleury's algorithm).","hint":"","page":null},{"id":"k_mt4514_3_4","type":"lemma","label":"Lemma 1.5","front":"Can an edge in a cycle be a cut-edge?","back":"No: any edge contained in a cycle is not a cut-edge.","hint":"Replace the edge by the rest of the cycle.","page":null},{"id":"k_mt4514_3_5","type":"theorem","label":"Theorem 1.6","front":"Give the three equivalent characterisations of a tree on $n$ vertices.","back":"(1) $G$ is connected and acyclic;\n(2) $G$ is connected and has $n-1$ edges;\n(3) $G$ has $n-1$ edges and is acyclic.","hint":"Any two of connected, acyclic and $n-1$ edges imply the third.","page":null},{"id":"k_mt4514_3_6","type":"theorem","label":"Theorem 1.7","front":"Characterise trees in terms of paths between vertices.","back":"$G$ is a tree if and only if any two vertices of $G$ are connected by exactly one path.","hint":"","page":null},{"id":"k_mt4514_3_7","type":"definition","label":"Definition 1.8","front":"Define a spanning tree of a connected graph $G$.","back":"A subgraph $T$ of $G$ which is a tree with $V(T)=V(G)$.","hint":"","page":null},{"id":"k_mt4514_3_8","type":"corollary","label":"Corollary 1.9","front":"State the three parts of Corollary 1.9 about trees.","back":"(1) Each connected graph on $n$ vertices has at least $n-1$ edges and contains a spanning tree.\n(2) Every edge of a tree is a cut-edge.\n(3) Adding an edge to a tree creates precisely one cycle.","hint":"","page":null},{"id":"k_mt4514_3_9","type":"definition","label":"Definition 2.1 (Prüfer code)","front":"How is the Prüfer code of a labelled tree on $n$ vertices built?","back":"Repeatedly delete the leaf $a_i$ with the smallest label and record its unique neighbour $b_i$. After $n-2$ steps one edge $a_{n-1}b_{n-1}$ remains. The Prüfer code is $f(T)=(b_1,\\dots,b_{n-2})$.","hint":"","page":null},{"id":"k_mt4514_3_10","type":"lemma","label":"Lemma 2.3","front":"State the key facts about a Prüfer code $(b_1,\\dots,b_{n-2})$ (which vertices appear, how often, and the first leaf).","back":"(i) $\\{b_1,\\dots,b_{n-2}\\}$ is exactly the set of non-leaf vertices.\n(ii) The first leaf removed, $a_1$, is $\\min(S\\setminus\\{b_1,\\dots,b_{n-2}\\})$.\n(iv) $a_i=\\min\\big(S\\setminus\\{a_1,\\dots,a_{i-1},b_i,\\dots,b_{n-2}\\}\\big)$.\n(v) A vertex of degree $d$ appears $d-1$ times in the code.","hint":"","page":null},{"id":"k_mt4514_3_11","type":"result","label":"Decoding a Prüfer code","front":"How do you recover a tree from its Prüfer code?","back":"Start with the list $L=[1,\\dots,n]$. Join the smallest number in $L$ not in the code to the first number in the code; remove the former from $L$ and the latter from the code. Repeat until two numbers remain in $L$, then join those two.","hint":"","page":null},{"id":"k_mt4514_3_12","type":"theorem","label":"Theorem 2.5 (Cayley's Theorem, 1889)","front":"State Cayley's Theorem.","back":"There are $n^{n-2}$ distinct labelled trees on $n$ vertices.","hint":"The Prüfer code is a bijection from labelled trees on $S$ to $S^{n-2}$.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt4514_4":{"id":"c_mt4514_4","moduleId":"m_mt4514","title":"5. Matchings and Connectivity","start":32,"end":41,"order":4,"cards":[{"id":"k_mt4514_4_1","type":"definition","label":"Definition 1.3","front":"Define a matching, and perfect, maximal and maximum matchings.","back":"$M\\subseteq E(G)$ is a matching if no two edges of $M$ share a vertex. It is perfect if every vertex is incident with an edge of $M$; maximal if no matching strictly contains it; maximum if no matching has more edges.","hint":"A maximal matching need not be maximum, e.g. the middle edge of $P_4$.","page":null},{"id":"k_mt4514_4_2","type":"definition","label":"Definition 1.5","front":"Define alternating and augmenting paths with respect to a matching $M$.","back":"A path is alternating if, of every two consecutive edges on it, one is in $M$. An alternating path of length at least one is augmenting if its first and last vertices do not belong to any edge of $M$.","hint":"","page":null},{"id":"k_mt4514_4_3","type":"lemma","label":"Lemma 1.6","front":"If $P$ is an augmenting path for a matching $M$, what is $M\\oplus E(P)$?","back":"A matching with $|M\\oplus E(P)|=|M|+1$.","hint":"$S\\oplus T=(S\\setminus T)\\cup(T\\setminus S)$.","page":null},{"id":"k_mt4514_4_4","type":"theorem","label":"Theorem 1.7 (Berge, 1957)","front":"State Berge's theorem.","back":"A matching $M$ is maximum if and only if there is no augmenting path for $M$.","hint":"Components of $M\\oplus M'$ are paths and cycles alternating between $M$ and $M'$; a path with more $M'$-edges is augmenting.","page":null},{"id":"k_mt4514_4_5","type":"theorem","label":"Theorem 1.10 (Hall's Theorem)","front":"State Hall's Theorem.","back":"Let $G$ be bipartite with bipartition $A\\cup B$. Then $G$ has a matching which matches $A$ if and only if for every $S\\subseteq A$, $$|N(S)|\\geq|S|.\\qquad(\\ast)$$","hint":"⇐: take a maximum matching and unmatched $u$; the vertices $X$ reachable by alternating paths satisfy $|N(X)|<|X|$.","page":null},{"id":"k_mt4514_4_6","type":"corollary","label":"Corollary 1.11","front":"What does a $k$-regular bipartite graph ($k\\geq1$) always have?","back":"A perfect matching.","hint":"$|A|=|B|$ by handshaking, and $k|S|\\leq k|N(S)|$ gives Hall's condition.","page":null},{"id":"k_mt4514_4_7","type":"corollary","label":"Corollary 1.12 (defect Hall)","front":"If $|N(S)|\\geq|S|-d$ for every $S\\subseteq A$, what matching exists?","back":"A matching of cardinality $|A|-d$.","hint":"Add $d$ new vertices to $B$ joined to all of $A$.","page":null},{"id":"k_mt4514_4_8","type":"definition","label":"Definition 2.1","front":"Define a spanning subgraph (factor), a $k$-factor and a $k$-factorization.","back":"A spanning subgraph (factor) has $V(G')=V(G)$ and $E(G')\\subseteq E(G)$. A $k$-factor is a $k$-regular spanning subgraph. A $k$-factorization partitions $E(G)$ into disjoint $k$-factors; $G$ is then $k$-factorable.","hint":"","page":null},{"id":"k_mt4514_4_9","type":"lemma","label":"Lemma 2.2","front":"What is a 1-factor, and what does its existence imply about $|V(G)|$?","back":"(i) A 1-factor of $G$ is a perfect matching of $G$.\n(ii) If $G$ has a 1-factor then $|V(G)|$ is even.","hint":"","page":null},{"id":"k_mt4514_4_10","type":"theorem","label":"Theorem 2.4 (Tutte, 1947)","front":"State Tutte's theorem.","back":"$G$ has a perfect matching (1-factor) if and only if for every $S\\subseteq V(G)$, $$q(G-S)\\leq|S|,$$ where $q(H)$ is the number of odd components of $H$.","hint":"Useful for showing a 1-factor does not exist.","page":null},{"id":"k_mt4514_4_11","type":"theorem","label":"Theorem 2.6","front":"When can a bipartite graph be decomposed into $d$ edge-disjoint perfect matchings?","back":"If and only if it is $d$-regular.","hint":"","page":null},{"id":"k_mt4514_4_12","type":"theorem","label":"Theorem 2.7","front":"Which complete graphs are 1-factorable?","back":"(i) $K_{2n+1}$ is not 1-factorable.\n(ii) $K_{2n}$ is 1-factorable.","hint":"Construction: vertices $u,v_0,\\dots,v_{2n-2}$ mod $2n-1$, with $F_i=uv_i\\cup\\{v_{i+k}v_{i-k}:1\\leq k\\leq n-1\\}$.","page":null},{"id":"k_mt4514_4_13","type":"lemma","label":"Lemma 2.8","front":"What is a 2-factor, and what does 2-factorability imply about degrees?","back":"(i) A 2-factor is a disjoint union of cycles using all the vertices.\n(ii) If a graph is 2-factorable, every vertex has even degree.","hint":"","page":null},{"id":"k_mt4514_4_14","type":"theorem","label":"Theorem 2.9 (Petersen, 1891)","front":"State Petersen's theorem on regular graphs of even degree.","back":"(i) Every regular graph of positive even degree has a 2-factor.\n(ii) Every regular graph of positive even degree is 2-factorable.","hint":"Orient an Euler tour, split each $v$ into $v^o,v^i$ to get a $k$-regular bipartite graph, then use Hall.","page":null},{"id":"k_mt4514_4_15","type":"theorem","label":"Theorem 2.10","front":"Which complete graphs are 2-factorable?","back":"(i) $K_{2n}$ is not 2-factorable (all degrees are odd).\n(ii) $K_{2n+1}$ is 2-factorable.","hint":"","page":null},{"id":"k_mt4514_4_16","type":"definition","label":"Definition 3.1","front":"Define an edge colouring and the edge-chromatic number $\\chi_e(G)$.","back":"A map $c:E(G)\\to\\mathbb N$ with $c(e)\\neq c(e')$ whenever distinct edges $e,e'$ share a vertex. $G$ is $k$-edge-colourable if it has an edge colouring with $k$ colours, and $\\chi_e(G)$ is the minimum such $k$.","hint":"An edge colouring is a partition of $E(G)$ into matchings.","page":null},{"id":"k_mt4514_4_17","type":"lemma","label":"Lemma 3.2","front":"Give the simple bounds on $\\chi_e(G)$.","back":"For $G$ with at least one edge, $$\\Delta(G)\\leq\\chi_e(G)\\leq2\\Delta(G)-1.$$","hint":"Greedy: each edge meets at most $2\\Delta-2$ others.","page":null},{"id":"k_mt4514_4_18","type":"theorem","label":"Theorem 3.3 (Vizing's theorem)","front":"State Vizing's theorem.","back":"For a simple graph $G$, $$\\Delta(G)\\leq\\chi_e(G)\\leq\\Delta(G)+1.$$","hint":"","page":null},{"id":"k_mt4514_4_19","type":"theorem","label":"Theorem 3.5","front":"What is $\\chi_e(G)$ for a bipartite graph $G$?","back":"$\\chi_e(G)=\\Delta(G)$.","hint":"Embed in a $\\Delta$-regular bipartite graph, remove a perfect matching as one colour, and induct.","page":null},{"id":"k_mt4514_4_20","type":"theorem","label":"Theorem 3.6","front":"What is $\\chi_e(K_n)$ for $n>1$?","back":"$\\chi_e(K_n)=n$ if $n$ is odd, and $\\chi_e(K_n)=n-1$ if $n$ is even.","hint":"E.g. the Six Nations ($K_6$) needs $5$ rounds.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt4514_5":{"id":"c_mt4514_5","moduleId":"m_mt4514","title":"6. Planarity and Colouring","start":42,"end":53,"order":5,"cards":[{"id":"k_mt4514_5_1","type":"definition","label":"Definition 2.1","front":"When is a graph planar?","back":"If it has a drawing in the plane without crossings. The image of such a drawing is a planar drawing (embedding).","hint":"","page":null},{"id":"k_mt4514_5_2","type":"lemma","label":"Lemma 2.5","front":"When is an edge on the boundary of only one face?","back":"If and only if it is a cut-edge.","hint":"","page":null},{"id":"k_mt4514_5_3","type":"lemma","label":"Lemma 2.8 (Handshaking Lemma for Planar Graphs)","front":"State the Handshaking Lemma for planar graphs.","back":"For a planar drawing $D$ of $G$, with $\\ell(f_i)$ the length of face $f_i$, $$\\sum\\ell(f_i)=2|E(G)|.$$","hint":"Every edge is counted twice.","page":null},{"id":"k_mt4514_5_4","type":"theorem","label":"Theorem 2.9 (Euler's Formula)","front":"State Euler's Formula.","back":"If $G$ is a connected planar graph with planar drawing $D$, $$|V(G)|-|E(G)|+|F_D(G)|=2.$$","hint":"Induction on $|E(G)|$: trees give the base case; otherwise delete a cycle edge, which merges two faces.","page":null},{"id":"k_mt4514_5_5","type":"definition","label":"Definition 2.11","front":"When is a graph 2-connected?","back":"A connected graph with at least 3 vertices such that $G-v$ is connected for every $v\\in V(G)$.","hint":"In a 2-connected plane graph every face is bounded by a cycle (Lemma 2.12).","page":null},{"id":"k_mt4514_5_6","type":"corollary","label":"Corollaries 2.13, 2.14","front":"Which two small graphs are non-planar, and how does Euler's Formula show it?","back":"$K_5$: a drawing would have $f=7$ faces, but $2e\\geq3f$ gives $f\\leq20/3<7$.\n$K_{3,3}$: $f=5$, but with no odd cycles every face has length $\\geq4$, so $f\\leq18/4<5$.","hint":"","page":null},{"id":"k_mt4514_5_7","type":"corollary","label":"Corollary 2.15","front":"Give the edge bound for a planar graph with $|V(G)|\\geq3$.","back":"$$|E(G)|\\leq3|V(G)|-6.$$","hint":"Add edges until maximally planar; then every face is a triangle, so $2e=3f$.","page":null},{"id":"k_mt4514_5_8","type":"corollary","label":"Corollary 2.16","front":"What degree must some vertex of a connected planar graph have?","back":"Every connected planar graph has at least one vertex of degree less than $6$.","hint":"","page":null},{"id":"k_mt4514_5_9","type":"theorem","label":"Theorem 2.17 (Kuratowski's Theorem)","front":"State Kuratowski's Theorem.","back":"A finite connected graph is planar if and only if it does not have $K_{3,3}$ or $K_5$ as a topological minor. Equivalently, $G$ is non-planar iff it has a subgraph which is a subdivision of $K_{3,3}$ or $K_5$.","hint":"E.g. the Petersen graph is non-planar.","page":null},{"id":"k_mt4514_5_10","type":"definition","label":"Definition 3.1","front":"Define a vertex colouring and the chromatic number $\\chi(G)$.","back":"A map $c:V(G)\\to\\mathbb N$ with $c(u)\\neq c(v)$ whenever $uv\\in E(G)$. $G$ is $k$-colourable if it has a vertex colouring with $k$ colours, and $\\chi(G)$ is the minimum such $k$.","hint":"","page":null},{"id":"k_mt4514_5_11","type":"theorem","label":"Theorem 3.4 (Four Colour Theorem)","front":"State the Four Colour Theorem.","back":"Every planar graph is four-colourable.","hint":"","page":null},{"id":"k_mt4514_5_12","type":"proposition","label":"Proposition 3.6","front":"Give the greedy upper bound on $\\chi(G)$.","back":"$\\chi(G)\\leq\\Delta(G)+1$.","hint":"Tight for odd cycles and complete graphs.","page":null},{"id":"k_mt4514_5_13","type":"theorem","label":"Theorem 3.7 (Brooks' Theorem)","front":"State Brooks' Theorem.","back":"If $G$ is connected and is not a complete graph or an odd cycle, then $\\chi(G)\\leq\\Delta(G)$.","hint":"","page":null},{"id":"k_mt4514_5_14","type":"definition","label":"Definition 4.1","front":"Define the chromatic polynomial $P_G(k)$ and relate it to $\\chi(G)$.","back":"$P_G(k)$ is the number of $k$-colourings of $G$ (vertices fixed, colours significant). $\\chi(G)$ is the least positive integer $k$ with $P_G(k)\\neq0$.","hint":"","page":null},{"id":"k_mt4514_5_15","type":"equation","label":"Example 4.3","front":"Give $P_G(k)$ for $K_3$, $K_n$ and the empty graph on $n$ vertices.","back":"$P_{K_3}(k)=k(k-1)(k-2)$\n$P_{K_n}(k)=k(k-1)(k-2)\\cdots(k-n+1)$\nEmpty graph: $k^n$.","hint":"","page":null},{"id":"k_mt4514_5_16","type":"theorem","label":"Theorem 4.4","front":"What is $P_G(k)$ if $G$ has components $G_1,\\dots,G_k$?","back":"$P_G(k)=P_{G_1}(k)\\times\\cdots\\times P_{G_k}(k)$.","hint":"","page":null},{"id":"k_mt4514_5_17","type":"lemma","label":"Lemma 4.5 (Deletion/Contraction Lemma)","front":"State the Deletion/Contraction Lemma.","back":"Let $vw$ be an edge of $G$, $G_1$ the graph with $vw$ deleted and $G_2$ the graph with $vw$ contracted. Then $$P_G(k)=P_{G_1}(k)-P_{G_2}(k).$$","hint":"Colourings of $G_1$ either give $v,w$ the same colour (count $P_{G_2}$) or different colours (count $P_G$).","page":null},{"id":"k_mt4514_5_18","type":"corollary","label":"Corollary 4.6","front":"List the six properties of the chromatic polynomial $P_G(k)$.","back":"(i) It is a polynomial in $k$;\n(ii) its degree is $|V(G)|$;\n(iii) it is monic;\n(iv) it has no constant term;\n(v) its terms alternate in sign;\n(vi) the coefficient of $k^{|V(G)|-1}$ is $-|E(G)|$.","hint":"","page":null},{"id":"k_mt4514_5_19","type":"theorem","label":"Theorem 4.8","front":"What is the chromatic polynomial of a tree on $n$ vertices?","back":"$P_T(k)=k(k-1)^{n-1}$.","hint":"","page":null},{"id":"k_mt4514_5_20","type":"theorem","label":"Theorem 4.9","front":"What is the chromatic polynomial of the cycle $C_n$?","back":"$$P_{C_n}(k)=(k-1)^n+(k-1)(-1)^n.$$","hint":"Induction: deleting an edge of $C_{n+1}$ gives $P_{n+1}$, contracting it gives $C_n$.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true},"c_mt4514_6":{"id":"c_mt4514_6","moduleId":"m_mt4514","title":"7. Ramsey Theory","start":54,"end":60,"order":6,"cards":[{"id":"k_mt4514_6_1","type":"theorem","label":"Theorem 1.2 (Mantel, 1907)","front":"State Mantel's Theorem.","back":"A triangle-free graph on $n$ vertices has at most $\\left\\lfloor\\dfrac{n^2}{4}\\right\\rfloor$ edges.","hint":"With $d=\\Delta(G)$, the neighbourhood of a max-degree vertex has no internal edges, so $|E|\\leq d(n-d)\\leq n^2/4$. Attained by $K_{\\lceil n/2\\rceil,\\lfloor n/2\\rfloor}$.","page":null},{"id":"k_mt4514_6_2","type":"theorem","label":"Theorem 1.3 (Turán)","front":"State Turán's Theorem.","back":"Let $G$ have $n$ vertices and $e$ edges. If $$e>\\frac{n^2}{2}\\left(1-\\frac1r\\right)$$ then $G$ contains $K_{r+1}$ as a subgraph.","hint":"","page":null},{"id":"k_mt4514_6_3","type":"theorem","label":"Theorem 2.1","front":"What must every graph on six vertices contain?","back":"Either a triangle of edges or a triangle of non-edges.","hint":"A vertex has at least three neighbours or three non-neighbours (pigeonhole).","page":null},{"id":"k_mt4514_6_4","type":"definition","label":"Definition 3.1","front":"Define the Ramsey number $R(m,n)$.","back":"The least integer such that, whenever all edges of $K_{R(m,n)}$ are coloured red or blue, there is either a red $K_m$ or a blue $K_n$.","hint":"The order of colours matters.","page":null},{"id":"k_mt4514_6_5","type":"theorem","label":"Theorem 3.2","front":"What is $R(3,3)$ and why?","back":"$R(3,3)=6$: Theorem 2.1 gives $R(3,3)\\leq6$, and colouring the two 5-cycles of a 2-factorization of $K_5$ red and blue gives no monochromatic triangle.","hint":"","page":null},{"id":"k_mt4514_6_6","type":"proposition","label":"Proposition 3.3","front":"State the three basic facts about Ramsey numbers.","back":"(i) $R(m,n)=R(n,m)$;\n(ii) $R(n,1)=1$;\n(iii) $R(2,n)=n$ for $n\\geq2$.","hint":"","page":null},{"id":"k_mt4514_6_7","type":"theorem","label":"Theorem 3.4 (Ramsey's Theorem for Graphs)","front":"State Ramsey's Theorem and the recursive bound used to prove it.","back":"For all $m,n\\in\\mathbb N$, $R(m,n)$ is finite. For $m,n>1$, $$R(m,n)\\leq R(m,n-1)+R(m-1,n).$$","hint":"Split the other vertices by the colour of their edge to $v$; one side is big enough to recurse.","page":null},{"id":"k_mt4514_6_8","type":"corollary","label":"Corollary 3.6","front":"When can the Ramsey recursion be improved by $1$?","back":"If $R(m-1,n)$ and $R(m,n-1)$ are both even, then $$R(m,n)\\leq R(m-1,n)+R(m,n-1)-1.$$","hint":"Otherwise the red graph would have an odd number of vertices, all of odd degree, contradicting handshaking.","page":null},{"id":"k_mt4514_6_9","type":"corollary","label":"Corollary 3.7","front":"Give the non-recursive upper bound on $R(m,n)$.","back":"$$R(m,n)\\leq\\frac{(m+n-2)!}{(m-1)!(n-1)!}=\\binom{m+n-2}{m-1}.$$","hint":"","page":null},{"id":"k_mt4514_6_10","type":"equation","label":"Theorem 3.8","front":"What are $R(3,4)$, $R(3,5)$ and $R(4,4)$?","back":"$R(3,4)=9$, $R(3,5)=14$, $R(4,4)=18$.","hint":"","page":null},{"id":"k_mt4514_6_11","type":"theorem","label":"Theorem 3.9","front":"Define $R_k(s_1,\\dots,s_k)$ and state its recursive bound.","back":"$R_k(s_1,\\dots,s_k)$ is the least $N$ such that whenever the edges of $K_N$ are coloured with $k$ colours, there is a $K_{s_i}$ of colour $i$ for some $i$. It satisfies $$R_k(s_1,\\dots,s_k)\\leq R_k(s_1-1,\\dots,s_k)+\\cdots+R_k(s_1,\\dots,s_k-1),$$ so is finite.","hint":"","page":null},{"id":"k_mt4514_6_12","type":"corollary","label":"Corollary 3.10 (Schur)","front":"State Schur's theorem.","back":"For every integer $k$ there exists $N$ such that if $\\{1,\\dots,N\\}$ is coloured with $k$ colours, there is a monochromatic solution to $x+y=z$ ($x=y$ allowed).","hint":"Take $N=R_k(3,\\dots,3)-1$ and colour edge $ij$ of $K_{N+1}$ by the colour of $|i-j|$.","page":null}],"created":1,"upd":1,"seed":true,"printedPages":true}}};
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=p=>p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
+function today(){const n=new Date();return Math.round(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())/864e5);}
+function keyOf(d){return new Date(d*864e5).toISOString().slice(0,10);}
+function plural(n,w,p){return n+' '+(n===1?w:(p||w+'s'));}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+const clean=v=>JSON.parse(JSON.stringify(v));
+
+/* ---------- maths typesetting ---------- */
+const mjQueue=new Set();
+window.__mjFlush=()=>{const els=[...mjQueue].filter(e=>e.isConnected);mjQueue.clear();if(els.length)MathJax.typesetPromise(els).catch(()=>{});};
+function typeset(el){if(!el)return;if(window.__mjReady){try{MathJax.typesetClear&&MathJax.typesetClear([el]);}catch(e){}MathJax.typesetPromise([el]).catch(()=>{});}else mjQueue.add(el);}
+
+/* ---------- state ---------- */
+const LS='lemma_v1';
+const S={modules:{},chapters:{},stats:{days:{},newPerDay:20},texts:{},draft:null};
+(function loadCache(){const c=lsGet(LS);if(c){S.modules=c.modules||{};S.chapters=c.chapters||{};S.stats=Object.assign(S.stats,c.stats||{});}})();
+function cache(){lsSet(LS,{modules:S.modules,chapters:S.chapters,stats:S.stats});}
+function applySeed(){
+  if(!SEED)return;
+  let ids=Array.isArray(S.stats.seededIds)?S.stats.seededIds.slice():(S.stats.seeded?['m_mt3501','m_mt3507','m_mt3504']:[]);
+  const added=[];
+  for(const mid in SEED.modules){
+    if(ids.includes(mid))continue;
+    if(!S.modules[mid])S.modules[mid]=clean(SEED.modules[mid]);
+    for(const cid in SEED.chapters)if(SEED.chapters[cid].moduleId===mid&&!S.chapters[cid])S.chapters[cid]=clean(SEED.chapters[cid]);
+    ids.push(mid);added.push(SEED.modules[mid].name);
+  }
+  S.stats.seededIds=ids;S.stats.seeded=true;
+  if(added.length){cache();if(ids.length>added.length)setTimeout(()=>toast('New cards added: '+added.join(', ')),600);}
+}
+applySeed();
+
+/* ---------- runtime: Claude (db + sample) or standalone ---------- */
+let DB=null,SAMPLE=null,dbMode='connecting',RUNTIME=false;
+const API_KEY='lemma_api_key',API_MODEL='lemma_api_model',DEFAULT_MODEL='claude-sonnet-5-5';
+function apiSample(){
+  let key='';try{key=localStorage.getItem(API_KEY)||'';}catch(e){}
+  if(!key)return null;
+  return async(prompt)=>{
+    let model=DEFAULT_MODEL;try{model=localStorage.getItem(API_MODEL)||DEFAULT_MODEL;}catch(e){}
+    let r;
+    try{r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model,max_tokens:16000,messages:[{role:'user',content:prompt}]})});}
+    catch(e){throw{code:'network',message:'couldn\u2019t reach the Anthropic API. Check your connection'};}
+    if(!r.ok){let t='';try{t=(await r.json()).error.message;}catch(e){}throw{code:r.status===429?'rate_limited':'api',message:`the API returned ${r.status}${t?': '+t:''}`};}
+    const d=await r.json();
+    return{text:(d.content||[]).map(c=>c.text||'').join(''),truncated:d.stop_reason==='max_tokens'};
+  };
+}
+const wq={};
+function setSync(s){if(s)dbMode=s;const m={connecting:'Connecting\u2026',local:'Saved on this device',saving:'Saving\u2026',saved:'Saved',error:'Not synced, retrying'};$('#sync').textContent=m[dbMode]||'';}
+function dbWrite(path,val){const e=wq[path]||(wq[path]={pending:undefined,busy:false});e.pending=val===null?{del:true}:{val:clean(val)};if(DB&&!e.busy)flushPath(path);}
+async function flushPath(path){
+  const e=wq[path];e.busy=true;
+  while(e.pending!==undefined){
+    const job=e.pending;e.pending=undefined;setSync('saving');
+    try{job.del?await DB.doc(path).delete():await DB.doc(path).set(job.val);setSync('saved');}
+    catch(err){console.warn('write failed',path,err);setSync('error');if(e.pending===undefined)e.pending=job;await sleep(4000);}
+  }
+  e.busy=false;
+}
+function unwrapDoc(d){if(!d)return null;if(typeof d.data==='function')return d.data();if(d.data&&typeof d.data==='object'&&!Array.isArray(d.data))return d.data;return d;}
+async function listCol(name){const r=await DB.collection(name).get();const arr=Array.isArray(r)?r:(r&&(r.docs||r.items||r.documents))||[];return arr.map(d=>({id:d.id||d.doc_id||(d.ref&&d.ref.id)||(unwrapDoc(d)||{}).id,data:unwrapDoc(d)})).filter(x=>x.id&&x.data);}
+async function getDoc(path){try{return unwrapDoc(await DB.doc(path).get());}catch(e){return null;}}
+
+async function initRuntime(){
+  setSync('connecting');
+  for(let i=0;i<25&&!(window.claude&&window.claude.use);i++)await sleep(100);
+  if(!(window.claude&&window.claude.use)){RUNTIME=false;SAMPLE=apiSample();setSync('local');render();return;}
+  RUNTIME=true;
+  claude.use('sample').then(s=>{SAMPLE=s||null;render();}).catch(()=>{});
+  let d=null;try{d=await claude.use('db');}catch(e){}
+  if(!d){setSync('local');render();return;}
+  DB=d;
+  try{
+    const [mods,chs,st]=await Promise.all([listCol('modules'),listCol('chapters'),getDoc('stats/main')]);
+    const merge=(local,remote,col)=>{
+      const out={...local};const rmap={};
+      for(const r of remote){rmap[r.id]=r.data;const l=local[r.id];if(!l||(r.data.upd||0)>=(l.upd||0))out[r.id]={...r.data,id:r.id};}
+      for(const id in local){if(!rmap[id]||(local[id].upd||0)>(rmap[id].upd||0))dbWrite(col+'/'+id,local[id]);}
+      return out;
+    };
+    S.modules=merge(S.modules,mods,'modules');
+    S.chapters=merge(S.chapters,chs,'chapters');
+    if(st){const days={...(st.days||{})};for(const k in S.stats.days){const a=S.stats.days[k],b=days[k]||{};days[k]={reviews:Math.max(a.reviews||0,b.reviews||0),new:Math.max(a.new||0,b.new||0)};}S.stats={...S.stats,...st,days,seeded:true,seededIds:[...new Set([...(S.stats.seededIds||[]),...(st.seededIds||[])])]};}
+    dbWrite('stats/main',S.stats);
+    cache();setSync('saved');
+    for(const p in wq)if(wq[p].pending!==undefined&&!wq[p].busy)flushPath(p);
+  }catch(e){console.warn(e);DB=null;setSync('local');}
+  render();
+}
+
+/* ---------- persistence ---------- */
+function putModule(m){m.upd=Date.now();S.modules[m.id]=m;cache();dbWrite('modules/'+m.id,m);}
+function putChapter(c){c.upd=Date.now();S.chapters[c.id]=c;cache();dbWrite('chapters/'+c.id,c);}
+const chT={};function putChapterSoon(c){c.upd=Date.now();cache();clearTimeout(chT[c.id]);chT[c.id]=setTimeout(()=>{delete chT[c.id];dbWrite('chapters/'+c.id,c);},1200);}
+let stT;function putStats(){cache();clearTimeout(stT);stT=setTimeout(()=>dbWrite('stats/main',S.stats),1500);}
+function flushSoon(){for(const id in chT){clearTimeout(chT[id]);const c=S.chapters[id];if(c)dbWrite('chapters/'+id,c);delete chT[id];}}
+function putText(id,t){S.texts[id]=t;try{localStorage.setItem('lemma_text_'+id,t);}catch(e){}dbWrite('texts/'+id,{text:t.slice(0,180000)});}
+async function getText(id){
+  if(S.texts[id])return S.texts[id];
+  try{const t=localStorage.getItem('lemma_text_'+id);if(t){S.texts[id]=t;return t;}}catch(e){}
+  if(DB){const d=await getDoc('texts/'+id);if(d&&d.text){S.texts[id]=d.text;return d.text;}}
+  return null;
+}
+function delChapter(id){delete S.chapters[id];delete S.texts[id];try{localStorage.removeItem('lemma_text_'+id);}catch(e){}cache();dbWrite('chapters/'+id,null);dbWrite('texts/'+id,null);}
+function delModule(id){for(const c of chaptersOf(id))delChapter(c.id);delete S.modules[id];cache();dbWrite('modules/'+id,null);}
+
+/* ---------- queries ---------- */
+const modulesSorted=()=>Object.values(S.modules).sort((a,b)=>(a.created||0)-(b.created||0));
+const chaptersOf=mid=>Object.values(S.chapters).filter(c=>c.moduleId===mid).sort((a,b)=>(a.order-b.order)||(a.start-b.start));
+function dayStat(){const k=keyOf(today());return S.stats.days[k]||(S.stats.days[k]={reviews:0,new:0});}
+function buildQueue(f={}){
+  const t=today(),due=[],perMod=[];
+  for(const m of modulesSorted()){
+    if(f.moduleId&&m.id!==f.moduleId)continue;
+    const mf=[];
+    for(const c of chaptersOf(m.id)){
+      if(f.chapterId&&c.id!==f.chapterId)continue;
+      for(const k of c.cards||[]){if(k.sr){if(k.sr.due<=t)due.push({ch:c.id,id:k.id,d:k.sr.due});}else mf.push({ch:c.id,id:k.id});}
+    }
+    if(mf.length)perMod.push(mf);
+  }
+  const fresh=[];for(let i=0;perMod.some(a=>i<a.length);i++)for(const a of perMod)if(i<a.length)fresh.push(a[i]);
+  due.sort((a,b)=>a.d-b.d);
+  const left=Math.max(0,(S.stats.newPerDay??20)-(dayStat().new||0));
+  const nf=fresh.slice(0,left);
+  return{items:[...due,...nf],due:due.length,fresh:nf.length};
+}
+function countCards(chs){let n=0;for(const c of chs)n+=(c.cards||[]).length;return n;}
+function streak(){let n=0,d=today();if(!(S.stats.days[keyOf(d)]||{}).reviews)d--;while((S.stats.days[keyOf(d)]||{}).reviews){n++;d--;}return n;}
+function findCard(it){const c=S.chapters[it.ch];if(!c)return[null,null];return[c,(c.cards||[]).find(k=>k.id===it.id)];}
+
+/* ---------- spaced repetition ---------- */
+function nextSr(sr,g){
+  const t=today();let{interval=0,ease=2.5,reps=0,lapses=0}=sr||{};
+  if(g===0){reps=0;lapses++;ease=Math.max(1.3,ease-0.2);interval=0;}
+  else{
+    if(reps===0)interval=[0,1,1,3][g];
+    else if(reps===1)interval=[0,2,3,6][g];
+    else interval=Math.max(interval+1,Math.round(interval*(g===1?1.2:g===2?ease:ease*1.3)));
+    if(g===1)ease=Math.max(1.3,ease-0.15);if(g===3)ease+=0.15;reps++;
+  }
+  return{interval,ease:+ease.toFixed(2),reps,lapses,due:t+interval,last:t};
+}
+function fmtIv(n){if(n<=0)return'today';if(n===1)return'1 day';if(n<31)return n+' days';if(n<365)return Math.round(n/30)+' mo';return(n/365).toFixed(1)+' yr';}
+function fmtDue(d){const n=d-today();return n<=0?'today':n===1?'tomorrow':'in '+fmtIv(n);}
+
+/* ---------- multiple choice ---------- */
+const GRADUATE=2;
+const styleSetting=()=>S.stats.style||'auto';
+function isLearning(k){return !(k.sr&&k.sr.reps>=GRADUATE);}
+function wantsChoices(k){const s=styleSetting();if(s==='flip')return false;if(s==='mc')return true;return isLearning(k);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const kindOf=t=>['theorem','lemma','proposition','corollary'].includes(t)?'thm':t==='definition'?'def':'eq';
+function buildChoices(c,k){
+  const norm=s=>String(s||'').replace(/\s+/g,' ').trim();
+  const seen=new Set([norm(k.back)]);const picked=[];
+  const modCards=chaptersOf(c.moduleId).flatMap(ch=>ch.cards||[]);
+  const same=x=>kindOf(x.type)===kindOf(k.type);
+  const pools=[(c.cards||[]).filter(same),modCards.filter(same),c.cards||[],modCards];
+  for(const pool of pools){
+    for(const x of shuffle(pool.slice())){
+      if(picked.length>=3)break;
+      const b=norm(x.back);if(x.id===k.id||!b||seen.has(b))continue;
+      seen.add(b);picked.push(x.back);
+    }
+    if(picked.length>=3)break;
+  }
+  if(picked.length<3)return null;
+  return shuffle([{t:k.back,ok:true},...picked.map(t=>({t,ok:false}))]);
+}
+
+/* ---------- UI state ---------- */
+let tab='today',nav={module:null,chapter:null},filterType='all',editing=null,armed=null;
+function setTabAttrs(){document.querySelectorAll('.tabs button').forEach(b=>{if(b.dataset.tab===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});}
+function render(){
+  setTabAttrs();
+  const v=$('#view');
+  v.innerHTML=tab==='today'?viewToday():tab==='add'?viewAdd():nav.chapter&&S.chapters[nav.chapter]?viewChapter():nav.module&&S.modules[nav.module]?viewModule():viewModules();
+  typeset(v);
+}
+const noClaudeNote=()=>RUNTIME
+  ?'Card making needs the Claude connection, which isn\u2019t available in this view.'
+  :'To make cards from new notes, add an Anthropic API key under Settings on the Today tab.';
+
+/* ---------- views ---------- */
+function viewSettings(){
+  if(RUNTIME)return'';
+  let key='',model='';try{key=localStorage.getItem(API_KEY)||'';model=localStorage.getItem(API_MODEL)||'';}catch(e){}
+  return`<div class="section"><h3>Settings</h3>
+  <p class="note">Making cards from new notes uses Claude through your own Anthropic API key (from console.anthropic.com). The key stays in this browser and is only sent to Anthropic.</p>
+  <div class="field"><label for="apikey">Anthropic API key</label><input id="apikey" class="input" type="password" autocomplete="off" data-bind="api-key" placeholder="sk-ant-\u2026" value="${esc(key)}"></div>
+  <div class="field"><label for="apimodel">Model</label><input id="apimodel" class="input" data-bind="api-model" placeholder="${DEFAULT_MODEL}" value="${esc(model)}"></div>
+  <p class="note">${SAMPLE?'Card making is on.':'Card making is off until a key is saved.'}</p></div>`;
+}
+function viewToday(){
+  const mods=modulesSorted();
+  const dateStr=esc(new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));
+  if(!mods.length)return`<p class="date">${dateStr}</p>
+    <div class="empty"><h3>No cards yet</h3><p>Upload the lecture notes for a module and Lemma will make a set of cards for each chapter.</p>
+    <button class="btn primary" data-act="tab" data-tab="add">Add notes</button></div>${viewSettings()}`;
+  const q=buildQueue(),t=today();
+  let week='';for(let d=t-6;d<=t;d++){const st=S.stats.days[keyOf(d)]||{};const lbl=new Date(d*864e5).toLocaleDateString('en-GB',{weekday:'narrow',timeZone:'UTC'});
+    week+=`<div class="day${d===t?' today':''}"><span>${lbl}</span><span class="dot${st.reviews?' on':''}">${st.reviews||''}</span></div>`;}
+  const sk=streak();
+  const rows=mods.map(m=>{const mq=buildQueue({moduleId:m.id});const n=mq.items.length;
+    return`<li class="item"><div class="grow"><div class="name">${esc(m.name)}</div><div class="meta">${mq.due} due, ${mq.fresh} new</div></div>
+    <button class="btn ${n?'':'quiet'}" data-act="review" data-module="${m.id}" ${n?'':'disabled'}>Review</button></li>`;}).join('');
+  const total=countCards(Object.values(S.chapters));
+  return`<p class="date">${dateStr}</p>
+  <h2 class="due"><span class="hl">${q.items.length}</span> ${q.items.length===1?'card':'cards'} to review</h2>
+  <p class="sub">${q.items.length?`${q.due} due and ${q.fresh} new, from ${plural(total,'card')} across ${plural(mods.length,'module')}.`:(total?'All caught up. Come back tomorrow, or practise a chapter from Modules.':'Your chapters don\u2019t have cards yet. Open Modules to make them.')}</p>
+  <button class="btn primary big" data-act="review" ${q.items.length?'':'disabled'}>Start review</button>
+  <div class="week" aria-label="Cards reviewed in the last 7 days">${week}</div>
+  <p class="streak">${sk?plural(sk,'day')+' in a row':'Review today to start a streak'}</p>
+  <div class="section"><h3>By module</h3><ul class="list">${rows}</ul></div>
+  <div class="section"><h3>New cards per day</h3>
+    <div class="row" style="justify-content:space-between"><span class="muted small">How many unseen cards join each day\u2019s review.</span>
+    <div class="stepper"><button data-act="npd" data-d="-5" aria-label="Fewer">\u2212</button><span>${S.stats.newPerDay??20}</span><button data-act="npd" data-d="5" aria-label="More">+</button></div></div></div>
+  <div class="section"><h3>How cards are shown</h3>
+    <div class="chips" role="group" aria-label="How cards are shown">${[['auto','Automatic'],['mc','Always multiple choice'],['flip','Always classic']].map(([v,l])=>`<button class="chip" data-act="style" data-v="${v}" aria-pressed="${styleSetting()===v}">${l}</button>`).join('')}</div>
+    <p class="note">${{auto:`Cards start as multiple choice. Once you get a card right on ${GRADUATE} reviews in a row it becomes a classic flashcard, and it goes back to multiple choice if you miss it.`,mc:'Every card shows four answers to choose from.',flip:'Every card is a classic flashcard: recall the answer, then reveal it and rate yourself.'}[styleSetting()]}</p></div>
+  ${viewSettings()}`;
+}
+function viewModules(){
+  const mods=modulesSorted();
+  if(!mods.length)return`<div class="empty"><h3>No modules yet</h3><p>Upload a module\u2019s notes to get started.</p><button class="btn primary" data-act="tab" data-tab="add">Add notes</button></div>`;
+  return`<h2 style="font-size:1.55rem;margin:8px 0 14px">Modules</h2><ul class="list">${mods.map(m=>{const chs=chaptersOf(m.id);const q=buildQueue({moduleId:m.id});
+    return`<li class="item"><button class="tap" data-act="open-module" data-id="${m.id}"><div class="grow"><div class="name">${esc(m.name)}</div>
+    <div class="meta">${plural(chs.length,'chapter')}, ${plural(countCards(chs),'card')}</div></div>
+    <span class="pill${q.due?'':' zero'}">${q.due} due</span></button></li>`;}).join('')}</ul>
+    <div class="section"><button class="btn quiet" data-act="tab" data-tab="add">Add another module</button></div>`;
+}
+function chapterStatus(c){
+  if(genStatus[c.id])return`<span class="status busy" data-status="${c.id}">${esc(genStatus[c.id])}</span>`;
+  if(c.error&&!(c.cards||[]).length)return`<span class="status err">Couldn\u2019t make cards: ${esc(c.error)}</span>`;
+  if(!(c.cards||[]).length)return`<span class="status">No cards yet</span>`;
+  const t=today();const due=c.cards.filter(k=>k.sr&&k.sr.due<=t).length,fresh=c.cards.filter(k=>!k.sr).length;
+  return`<span class="status">${plural(c.cards.length,'card')}, ${due} due, ${fresh} unseen</span>`;
+}
+const pagesLabel=c=>`${c.printedPages?'Notes pages':'Pages'} ${c.start}\u2013${c.end}`;
+function viewModule(){
+  const m=S.modules[nav.module],chs=chaptersOf(m.id),q=buildQueue({moduleId:m.id});
+  const missing=chs.filter(c=>!(c.cards||[]).length&&!genStatus[c.id]).length;
+  return`<button class="back" data-act="up">\u2039 Modules</button>
+  <input class="title-input" data-bind="rename-module" value="${esc(m.name)}" aria-label="Module name">
+  <p class="muted small" style="margin:4px 0 14px">${plural(chs.length,'chapter')}, ${plural(countCards(chs),'card')}</p>
+  <div class="row"><button class="btn primary" data-act="review" data-module="${m.id}" ${q.items.length?'':'disabled'}>Review ${q.items.length}</button>
+  ${missing&&SAMPLE?`<button class="btn" data-act="gen-missing">Make cards for ${plural(missing,'chapter')}</button>`:''}
+  <button class="btn quiet" data-act="add-to-module">Add notes</button></div>
+  ${!SAMPLE&&missing?`<p class="note">${noClaudeNote()}</p>`:''}
+  <div class="section"><h3>Chapters</h3><ul class="list">${chs.map(c=>`<li class="item"><button class="tap" data-act="open-chapter" data-id="${c.id}"><div class="grow">
+    <div class="name">${esc(c.title)}</div><div class="meta">${pagesLabel(c)}</div>${chapterStatus(c)}</div></button></li>`).join('')||'<li class="item muted">No chapters.</li>'}</ul></div>
+  <div class="section"><button class="btn danger" data-act="del-module">${armed==='del-module'?'Tap again to delete this module':'Delete module'}</button></div>`;
+}
+function viewChapter(){
+  const c=S.chapters[nav.chapter],m=S.modules[c.moduleId],cards=c.cards||[],q=buildQueue({chapterId:c.id});
+  const types=[...new Set(cards.map(k=>k.type))];
+  const shown=cards.filter(k=>filterType==='all'||k.type===filterType);
+  const busy=!!genStatus[c.id];
+  const canRemake=SAMPLE&&!c.seed;
+  const list=shown.map(k=>editing===k.id?`<li class="cl"><div class="stack">
+      <input class="input" data-edit="label" value="${esc(k.label)}" aria-label="Label">
+      <textarea class="input" data-edit="front" aria-label="Question">${esc(k.front)}</textarea>
+      <textarea class="input" data-edit="back" aria-label="Answer" style="min-height:140px">${esc(k.back)}</textarea>
+      <textarea class="input" data-edit="hint" aria-label="Hint">${esc(k.hint||'')}</textarea>
+      <div class="row"><button class="btn primary" data-act="save-edit" data-id="${k.id}">Save card</button><button class="btn quiet" data-act="cancel-edit">Cancel</button></div></div></li>`
+    :`<li class="cl"><div class="lab"><span>${esc(k.label||cap(k.type))}</span><span>${!k.sr?'unseen':(styleSetting()==='auto'&&isLearning(k)?'learning, due ':'due ')+esc(fmtDue(k.sr.due))}</span></div>
+      <div class="f">${esc(k.front)}</div><div class="b">${esc(k.back)}</div>
+      ${k.hint?`<div class="b muted" style="margin-top:6px;font-style:italic">${esc(k.hint)}</div>`:''}
+      <div class="acts"><button class="link" data-act="edit" data-id="${k.id}">Edit</button><button class="link" data-act="del-card" data-id="${k.id}">${armed==='card:'+k.id?'Tap again to delete':'Delete'}</button></div></li>`).join('');
+  return`<button class="back" data-act="up">\u2039 ${esc(m?m.name:'Module')}</button>
+  <input class="title-input" data-bind="rename-chapter" value="${esc(c.title)}" aria-label="Chapter name">
+  <p style="margin:4px 0 14px">${chapterStatus(c)}</p>
+  <div class="row">
+    <button class="btn primary" data-act="review" data-chapter="${c.id}" ${q.items.length?'':'disabled'}>Review ${q.items.length}</button>
+    <button class="btn" data-act="cram" data-chapter="${c.id}" ${cards.length?'':'disabled'}>Practise all</button>
+    ${canRemake?`<button class="btn quiet" data-act="gen" data-id="${c.id}" ${busy?'disabled':''}>${cards.length?(armed==='regen'?'Tap again to replace cards':'Remake cards'):'Make cards'}</button>`:''}
+  </div>
+  <p class="note">Practise all runs through every card without changing when they\u2019re next due.</p>
+  ${types.length>1?`<div class="chips">${['all',...types].map(t=>`<button class="chip" data-act="filter" data-t="${esc(t)}" aria-pressed="${filterType===t}">${t==='all'?'All '+cards.length:esc(cap(t))+' '+cards.filter(k=>k.type===t).length}</button>`).join('')}</div>`:''}
+  <ul class="cardlist">${list||(busy?'':'<li class="muted">No cards in this chapter yet.</li>')}</ul>
+  <div class="section"><button class="btn danger" data-act="del-chapter">${armed==='del-chapter'?'Tap again to delete this chapter':'Delete chapter'}</button></div>`;
+}
+function viewAdd(){
+  const d=S.draft;
+  if(!d||d.stage==='pick'){
+    const mods=modulesSorted();const sel=d&&d.moduleId||'';
+    return`<h2 style="font-size:1.55rem;margin:8px 0 6px">Add notes</h2>
+    <p class="note">Upload a module\u2019s lecture notes. Lemma splits them into chapters, then writes cards for the definitions, theorems, equations and key results in each one.</p>
+    <div class="field"><label for="dmod">Module</label>
+      <select id="dmod" class="input" data-bind="draft-module"><option value="">New module</option>${mods.map(m=>`<option value="${m.id}" ${m.id===sel?'selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
+    ${sel?'':`<div class="field"><label for="dname">Module name</label><input id="dname" class="input" data-bind="draft-name" placeholder="e.g. MT3501 Linear Mathematics" value="${esc(d&&d.name||'')}"></div>`}
+    <label class="btn primary big" style="cursor:pointer">Choose notes file<input type="file" accept=".pdf,.txt,.tex,.md,application/pdf,text/plain" data-bind="draft-file" hidden></label>
+    <p class="note">PDF works best. LaTeX (.tex) and plain text files work too. Scanned or handwritten PDFs have no readable text, so they can\u2019t be used.</p>
+    ${SAMPLE?'':`<p class="note">${noClaudeNote()} You can still upload notes and set chapters by hand.</p>`}`;
+  }
+  if(d.stage==='working')return`<h2 style="font-size:1.4rem;margin:8px 0">${esc(d.fileName)}</h2>
+    <div class="meter"><i style="width:${Math.round((d.progress||0)*100)}%"></i></div><p class="muted" data-status="draft">${esc(d.msg||'')}</p>`;
+  if(d.stage==='review'){
+    const n=d.pages.length;
+    return`<h2 style="font-size:1.4rem;margin:8px 0 4px">Check the chapters</h2>
+    <p class="note">${esc(d.fileName)} has ${n} pages. ${d.detectNote?esc(d.detectNote)+' ':''}Edit titles or page ranges if anything looks off, then save.</p>
+    <div>${d.chapters.map((c,i)=>`<div class="chrow"><input class="input" data-bind="dr-title" data-i="${i}" value="${esc(c.title)}" aria-label="Chapter title">
+      <button class="link" data-act="dr-del" data-i="${i}">Remove</button>
+      <div class="pages">Pages <input class="input" type="number" min="1" max="${n}" data-bind="dr-start" data-i="${i}" value="${c.start}" aria-label="First page"> to <input class="input" type="number" min="1" max="${n}" data-bind="dr-end" data-i="${i}" value="${c.end}" aria-label="Last page"></div><span></span>
+      <p class="peek">p.${c.start}: ${esc(firstLine(d.pages[c.start-1]))}</p></div>`).join('')}</div>
+    <div class="row" style="margin:12px 0 18px"><button class="btn quiet" data-act="dr-add">Add chapter</button>${SAMPLE?`<button class="btn quiet" data-act="dr-detect">Find chapters again</button>`:''}</div>
+    <button class="btn primary big" data-act="dr-save" ${d.chapters.length?'':'disabled'}>${SAMPLE?'Save and make cards':'Save chapters'}</button>
+    <div class="row" style="margin-top:12px;justify-content:center"><button class="link" data-act="dr-reset">Start over</button></div>`;
+  }
+  return'';
+}
+function firstLine(p){return(p||'').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,2).join('  ').slice(0,110);}
+
+/* ---------- reading files ---------- */
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Couldn\u2019t load the PDF reader. Check your connection and try again.'));document.head.appendChild(s);});}
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+async function readPdf(file,onp){
+  await loadScript(PDFJS+'pdf.min.js');await loadScript(PDFJS+'pdf.worker.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js';
+  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer(),isEvalSupported:false}).promise;
+  const pages=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const tc=await (await pdf.getPage(i)).getTextContent();let s='';
+    for(const it of tc.items){s+=it.str||'';s+=it.hasEOL?'\n':' ';}
+    pages.push(s.replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').trim());onp(i/pdf.numPages,`Reading page ${i} of ${pdf.numPages}\u2026`);
+  }
+  return pages;
+}
+async function readText(file){const t=await file.text();const parts=t.split('\f');if(parts.length>1)return parts;const pages=[];let cur='';for(const l of t.split('\n')){cur+=l+'\n';if(cur.length>2500){pages.push(cur);cur='';}}if(cur.trim())pages.push(cur);return pages;}
+function chapterText(pages,s,e){return pages.slice(s-1,e).map((t,i)=>`[page ${s+i}]\n${t}`).join('\n\n');}
+
+/* ---------- talking to Claude ---------- */
+function fixLatexEscapes(s){
+  let out='',inStr=false;
+  for(let i=0;i<s.length;i++){
+    const ch=s[i];
+    if(!inStr){out+=ch;if(ch==='"')inStr=true;continue;}
+    if(ch==='"'){out+=ch;inStr=false;continue;}
+    if(ch==='\\'){
+      const c=s[i+1]||'';
+      if(c==='"'||c==='\\'||c==='/'){out+=ch+c;i++;continue;}
+      if(c==='u'&&/^[0-9a-fA-F]{4}$/.test(s.substr(i+2,4))){out+=ch;continue;}
+      if(c&&'bfnrt'.includes(c)&&!/[a-zA-Z]/.test(s[i+2]||'')){out+=ch;continue;}
+      out+='\\\\';continue;
+    }
+    if(ch==='\n'){out+='\\n';continue;}
+    if(ch==='\t'){out+=' ';continue;}
+    out+=ch;
+  }
+  return out;
+}
+function parseLoose(t){
+  t=String(t||'').replace(/```(?:json)?/g,'');const a=t.indexOf('{');if(a<0)throw new Error('the reply had no card data');
+  const body=fixLatexEscapes(t.slice(a));
+  try{return JSON.parse(body.slice(0,body.lastIndexOf('}')+1));}
+  catch(e){let k=body.lastIndexOf('}'),tries=0;while(k>0&&tries++<300){try{return JSON.parse(body.slice(0,k+1)+']}');}catch(_){}k=body.lastIndexOf('}',k-1);}throw new Error('the reply couldn\u2019t be read');}
+}
+async function ask(prompt,onText){
+  if(!SAMPLE)throw new Error(RUNTIME?'the Claude connection isn\u2019t available here':'no API key is saved');
+  try{const r=await SAMPLE(prompt,{modelTier:'default',cache:false,onText:onText?e=>onText(e.text||''):undefined});return r.text||'';}
+  catch(e){
+    if(e&&e.text)return e.text;
+    const code=e&&e.code;
+    if(code==='not_granted')throw new Error('Claude access wasn\u2019t allowed for this page');
+    if(code==='rate_limited')throw new Error('too many requests right now, try again in a few minutes');
+    throw new Error((e&&e.message)||'the request failed');
+  }
+}
+function outline(pages){
+  let out='';
+  pages.forEach((p,i)=>{const lines=p.split('\n').map(s=>s.trim()).filter(Boolean);
+    const head=lines.slice(0,3).join(' | ').slice(0,160);
+    const hs=lines.filter(l=>l.length<90&&/^(chapter|part|section|appendix|\d{1,2}(\.\d{1,2})?\.?\s+[A-Z])/i.test(l)).slice(0,5).join(' | ').slice(0,260);
+    out+=`[p${i+1}] ${head}${hs?' || '+hs:''}\n`;});
+  return out.slice(0,70000);
+}
+async function detectChapters(d){
+  const n=d.pages.length;
+  const front=d.pages.slice(0,6).map((t,i)=>`[p${i+1}]\n${t}`).join('\n').slice(0,14000);
+  const prompt=`You are splitting a PDF of university mathematics lecture notes into chapters. Module: "${d.name}". The PDF has ${n} pages.
+
+Below is an outline: for each PDF page [pN], its first lines and any heading-like lines. After that is the full text of the first few pages, which usually include a table of contents.
+
+Rules:
+- Use the notes' top-level chapters (for example "Chapter 2 Linear maps" or "2 Linear maps"). If the notes have no chapters, use their top-level sections.
+- Page numbers are PDF page numbers as in [pN], not the printed page numbers.
+- Chapters must be in order, contiguous and non-overlapping. Leave out the title page, contents, index and bibliography.
+- Keep the notes' chapter number in the title, e.g. "2. Linear maps".
+
+Respond with only a JSON object, no commentary and no code fences:
+{"chapters":[{"title":"1. Introduction","start":3,"end":12}]}
+
+OUTLINE:
+${outline(d.pages)}
+
+FIRST PAGES:
+${front}`;
+  const obj=parseLoose(await ask(prompt,null));
+  const chs=(obj.chapters||[]).map(c=>({title:String(c.title||'Untitled').trim(),start:Math.max(1,Math.min(n,parseInt(c.start)||1)),end:Math.max(1,Math.min(n,parseInt(c.end)||n))})).filter(c=>c.end>=c.start).sort((a,b)=>a.start-b.start);
+  if(!chs.length)throw new Error('no chapters found');
+  return chs;
+}
+
+const genQueue=[],genStatus={};let genRunning=false;
+function queueGen(id){const c=S.chapters[id];if(!c||!SAMPLE||genQueue.includes(id))return;genQueue.push(id);genStatus[id]='Waiting to make cards\u2026';render();runGen();}
+async function runGen(){
+  if(genRunning)return;genRunning=true;
+  while(genQueue.length){
+    const id=genQueue[0];
+    try{await generate(id);}
+    catch(e){const c=S.chapters[id];if(c){c.error=String(e.message||e);putChapter(c);}toast('Couldn\u2019t make cards for '+(c?c.title:'a chapter'));}
+    genQueue.shift();delete genStatus[id];render();
+  }
+  genRunning=false;
+}
+function setStatus(id,msg){genStatus[id]=msg;const el=document.querySelector(`[data-status="${id}"]`);if(el)el.textContent=msg;}
+function splitParts(text,size){
+  const chunks=text.split(/\n\n(?=\[page \d+\])/);const parts=[];let cur='';
+  for(const c of chunks){if(cur&&cur.length+c.length>size){parts.push(cur);cur='';}cur+=(cur?'\n\n':'')+c;}
+  if(cur)parts.push(cur);return parts;
+}
+function cardPrompt(m,c,text,i,n,prev){
+  return`You are writing revision flashcards for a third-year university mathematics student.
+Module: ${m?m.name:''}
+Chapter: ${c.title} (PDF pages ${c.start}\u2013${c.end})${n>1?`, part ${i+1} of ${n}`:''}
+
+Below is text extracted from the lecture notes PDF. Extraction garbles mathematical symbols, subscripts, fractions and layout, so reconstruct the correct mathematics. Follow the notes' own definitions, notation, conventions and numbering exactly: the notes are the authority, not general conventions.
+
+Make one card for every:
+- definition
+- theorem, lemma, proposition and corollary
+- key equation or formula
+- other important result stated in the notes (named inequalities, criteria, standard results, solution methods)
+Skip worked examples, exercises and full proofs. When the notes prove a result, a card's "hint" may give the idea of the proof in one or two sentences.
+
+Each card has:
+- "type": one of definition, theorem, lemma, proposition, corollary, equation, result
+- "label": the notes' number and name, e.g. "Theorem 3.4 (Cayley\u2013Hamilton)" or "Definition 2.1"; just the name if unnumbered
+- "front": a question that prompts recall without giving the answer away, e.g. "State the Cayley\u2013Hamilton theorem." or "Define an eigenvalue of a linear map." or "Write down the formula for ..."
+- "back": the complete, precise answer as in the notes, with all hypotheses
+- "hint": a short proof idea or "" if none
+- "page": the [page N] number it appears on
+
+Maths: use LaTeX with $...$ inline and $$...$$ for displayed maths. The output is JSON, so write every LaTeX backslash doubled, e.g. "$\\\\frac{a}{b}$". For a line break (e.g. between conditions (i), (ii)) write \\n followed by a space.
+${prev.length?`Cards already made from earlier parts of this chapter (don't repeat them): ${prev.join('; ')}\n`:''}
+Respond with only a JSON object, no commentary and no code fences:
+{"cards":[{"type":"theorem","label":"...","front":"...","back":"...","hint":"...","page":12}]}
+
+NOTES TEXT:
+${text}`;
+}
+async function generate(id){
+  const c=S.chapters[id];if(!c)return;const m=S.modules[c.moduleId];
+  setStatus(id,'Loading notes\u2026');
+  const text=await getText(id);
+  if(!text)throw new Error('the notes text for this chapter is missing. Upload the notes again');
+  const parts=splitParts(text,32000);const made=[];
+  for(let i=0;i<parts.length;i++){
+    const pl=parts.length>1?` (part ${i+1} of ${parts.length})`:'';
+    setStatus(id,`Reading${pl}\u2026`);
+    const raw=await ask(cardPrompt(m,c,parts[i],i,parts.length,made.map(k=>k.label||k.front).slice(-80)),t=>{const k=(t.match(/"front"/g)||[]).length;setStatus(id,`Writing cards${pl}\u2026 ${made.length+k} so far`);});
+    const obj=parseLoose(raw);
+    for(const x of obj.cards||[]){
+      if(!x||!x.front||!x.back)continue;
+      const key=(String(x.label||'')+'|'+x.front).toLowerCase();
+      if(made.some(k=>(String(k.label||'')+'|'+k.front).toLowerCase()===key))continue;
+      made.push({id:uid('k'),type:String(x.type||'result').toLowerCase(),label:String(x.label||''),front:String(x.front),back:String(x.back),hint:String(x.hint||''),page:parseInt(x.page)||null});
+    }
+  }
+  if(!made.length)throw new Error('no cards came back');
+  const cur=S.chapters[id];if(!cur)return;
+  const old=cur.cards||[];
+  for(const k of made){const o=old.find(z=>z.sr&&((z.label&&z.label===k.label)||z.front===k.front));if(o)k.sr=o.sr;}
+  cur.cards=made;cur.error='';cur.generated=Date.now();putChapter(cur);
+  toast(`${plural(made.length,'card')} made for ${cur.title}`);
+}
+
+/* ---------- study session ---------- */
+let sess=null;
+function startSession(mode,f){
+  let items;
+  if(mode==='cram'){const c=S.chapters[f.chapterId];items=(c.cards||[]).map(k=>({ch:c.id,id:k.id}));for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}}
+  else items=buildQueue(f).items;
+  if(!items.length){toast('Nothing to review here right now');return;}
+  sess={mode,items,i:0,shown:false,done:0};
+  $('#study').hidden=false;showCard();
+}
+function showCard(){
+  const wrap=$('#cardwrap'),g=$('#grades');
+  if(sess.i>=sess.items.length){
+    $('#sbar').style.width='100%';$('#scount').textContent='';
+    const sk=streak();
+    wrap.innerHTML=`<article class="index" style="cursor:default"><div class="q">Done</div><div class="a">${plural(sess.done,'answer')} this session.${sess.mode==='review'&&sk>1?' '+plural(sk,'day')+' in a row.':''}</div></article>`;
+    g.className='grades two';g.innerHTML=`<button class="wide" data-act="study-close">Finish</button>`;return;
+  }
+  const it=sess.items[sess.i];const[c,k]=findCard(it);
+  if(!k){sess.i++;return showCard();}
+  sess.shown=false;sess.choices=null;sess.picked=null;
+  $('#sbar').style.width=Math.round(sess.i/sess.items.length*100)+'%';
+  $('#scount').textContent=`${sess.i+1} / ${sess.items.length}`;
+  const opts=wantsChoices(k)?buildChoices(c,k):null;
+  if(opts){
+    sess.choices=opts;
+    wrap.innerHTML=`<article class="index" style="cursor:default">
+    <div class="meta"><span class="type">${esc(cap(k.type))} <span class="modebadge">multiple choice</span></span><span>${esc(k.label)}</span></div>
+    <div class="q">${esc(k.front)}</div>
+    <p class="pick-note">Choose the correct answer.</p>
+    <div class="choices">${opts.map((o,i)=>`<button class="choice" data-act="choose" data-i="${i}"><span class="verdict" hidden></span><span class="ctext">${esc(o.t)}</span></button>`).join('')}</div>
+    <div class="hint" id="hint" hidden>${esc(k.hint||'')}</div>
+    <div class="src" id="src" hidden>${esc(c.title)}${k.page?`, p.${k.page}`:''}</div></article>`;
+    wrap.scrollTop=0;typeset(wrap);
+    g.className='grades two';g.innerHTML='';return;
+  }
+  wrap.innerHTML=`<article class="index" data-act="flip" aria-label="Flashcard. Tap to show the answer.">
+    <div class="meta"><span class="type">${esc(cap(k.type))}</span><span>${esc(k.label)}</span></div>
+    <div class="q">${esc(k.front)}</div>
+    <div class="a hidden-ans" id="ans">${esc(k.back)}</div>
+    <div class="hint" id="hint" hidden>${esc(k.hint||'')}</div>
+    <div class="src" id="src" hidden>${esc(c.title)}${k.page?`, p.${k.page}`:''}</div>
+    <p class="reveal-note" id="rnote">Tap to show answer</p></article>`;
+  wrap.scrollTop=0;typeset(wrap);
+  g.className='grades two';g.innerHTML=`<button class="wide" data-act="flip">Show answer</button>`;
+}
+function reveal(){
+  if(!sess||sess.shown||sess.i>=sess.items.length)return;sess.shown=true;
+  const a=$('#ans');a.classList.remove('hidden-ans');a.classList.add('reveal');const rn=$('#rnote');if(rn)rn.remove();
+  const h=$('#hint');if(h.textContent.trim())h.hidden=false;$('#src').hidden=false;
+  const g=$('#grades');const[,k]=findCard(sess.items[sess.i]);
+  if(sess.mode==='cram'){g.className='grades two';g.innerHTML=`<button class="g0" data-act="grade" data-g="0">Again<small>see it again</small></button><button class="g2" data-act="grade" data-g="2">Got it<small>next card</small></button>`;}
+  else{g.className='grades';g.innerHTML=['Again','Hard','Good','Easy'].map((n,i)=>`<button class="g${i}" data-act="grade" data-g="${i}">${n}<small>${fmtIv(nextSr(k.sr,i).interval)}</small></button>`).join('');}
+}
+function choose(i){
+  if(!sess||sess.shown||!sess.choices)return;
+  sess.shown=true;sess.picked=i;
+  const ok=sess.choices[i].ok;
+  document.querySelectorAll('.choice').forEach((b,j)=>{
+    b.disabled=true;const o=sess.choices[j];const v=b.querySelector('.verdict');
+    if(o.ok){b.classList.add('right');v.hidden=false;v.textContent=j===i?'Correct':'Correct answer';}
+    else if(j===i){b.classList.add('wrong');v.hidden=false;v.textContent='Your answer';}
+  });
+  const h=$('#hint');if(h.textContent.trim())h.hidden=false;$('#src').hidden=false;
+  if(!ok){const r=document.querySelector('.choice.right');if(r)r.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+  const[,k]=findCard(sess.items[sess.i]);
+  const g=$('#grades');g.className='grades two';
+  let sub='';
+  if(sess.mode==='review'){const nx=nextSr(k.sr,ok?2:0);sub=ok?(styleSetting()==='auto'&&nx.reps>=GRADUATE?`Next time as a flashcard, in ${fmtIv(nx.interval)}`:`Due again in ${fmtIv(nx.interval)}`):'You\u2019ll see this again today';}
+  else sub=ok?'Next card':'You\u2019ll see this again';
+  g.innerHTML=`<button class="wide" data-act="grade" data-g="${ok?2:0}">Continue<small style="color:inherit;opacity:.8">${sub}</small></button>`;
+  const btn=g.querySelector('button');if(btn)btn.focus({preventScroll:true});
+}
+function grade(gv){
+  if(!sess||!sess.shown)return;
+  const it=sess.items[sess.i];const[c,k]=findCard(it);
+  if(k&&sess.mode==='review'){
+    const wasNew=!k.sr;k.sr=nextSr(k.sr,gv);
+    const ds=dayStat();ds.reviews=(ds.reviews||0)+1;if(wasNew)ds.new=(ds.new||0)+1;
+    putChapterSoon(c);putStats();
+  }
+  if(gv===0)sess.items.push(it);
+  sess.done++;sess.i++;showCard();
+}
+function closeStudy(){$('#study').hidden=true;flushSoon();sess=null;render();}
+
+/* ---------- add-notes flow ---------- */
+async function onFile(file){
+  const d=S.draft||(S.draft={stage:'pick'});
+  if(!d.moduleId&&!(d.name||'').trim())d.name=file.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ');
+  if(d.moduleId&&S.modules[d.moduleId])d.name=S.modules[d.moduleId].name;
+  d.fileName=file.name;d.stage='working';d.progress=0;d.msg='Opening file\u2026';render();
+  const upd=(p,msg)=>{d.progress=p;d.msg=msg;const bar=document.querySelector('main .meter>i');if(bar)bar.style.width=Math.round(p*100)+'%';const m=document.querySelector('[data-status="draft"]');if(m)m.textContent=msg;};
+  try{
+    const isPdf=/\.pdf$/i.test(file.name)||file.type==='application/pdf';
+    d.pages=isPdf?await readPdf(file,upd):await readText(file);
+    const chars=d.pages.join('').replace(/\s/g,'').length;
+    if(chars<300)throw new Error('This file has almost no readable text. It may be a scanned PDF. Try a PDF made from LaTeX, or a text file.');
+    if(SAMPLE){upd(1,'Finding the chapters\u2026');await runDetect(d);}
+    else{d.chapters=[{title:d.name||'Notes',start:1,end:d.pages.length}];d.detectNote='';}
+    d.stage='review';
+  }catch(e){toast(e.message||'Couldn\u2019t read that file');d.stage='pick';}
+  render();
+}
+async function runDetect(d){
+  try{d.chapters=await detectChapters(d);d.detectNote=`Found ${plural(d.chapters.length,'chapter')}.`;}
+  catch(e){d.chapters=[{title:d.name||'Notes',start:1,end:d.pages.length}];d.detectNote='Couldn\u2019t find chapters automatically, so the whole file is one chapter for now.';}
+}
+function saveDraft(){
+  const d=S.draft;const n=d.pages.length;
+  const rows=d.chapters.map(c=>({title:(c.title||'').trim()||'Untitled',start:Math.max(1,Math.min(n,+c.start||1)),end:Math.max(1,Math.min(n,+c.end||n))})).map(c=>c.end<c.start?{...c,end:c.start}:c);
+  let m=d.moduleId&&S.modules[d.moduleId];
+  if(!m){m={id:uid('m'),name:(d.name||'').trim()||'Untitled module',created:Date.now()};putModule(m);}
+  let order=chaptersOf(m.id).reduce((a,c)=>Math.max(a,c.order||0),0)+1;
+  const ids=[];
+  for(const r of rows){const c={id:uid('c'),moduleId:m.id,title:r.title,start:r.start,end:r.end,order:order++,cards:[],created:Date.now(),source:d.fileName};putText(c.id,chapterText(d.pages,r.start,r.end));putChapter(c);ids.push(c.id);}
+  S.draft=null;tab='modules';nav={module:m.id,chapter:null};render();
+  if(SAMPLE){ids.forEach(queueGen);toast('Making cards. You can keep using the app while this runs.');}
+}
+
+/* ---------- events ---------- */
+function disarmLater(){clearTimeout(disarmLater._t);disarmLater._t=setTimeout(()=>{armed=null;if(!sess)render();},3500);}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  switch(el.dataset.act){
+    case'tab':tab=el.dataset.tab;armed=null;render();$('#view').scrollTop=0;break;
+    case'open-module':nav={module:el.dataset.id,chapter:null};armed=null;render();$('#view').scrollTop=0;break;
+    case'open-chapter':nav.chapter=el.dataset.id;filterType='all';editing=null;armed=null;render();$('#view').scrollTop=0;break;
+    case'up':if(nav.chapter)nav.chapter=null;else nav.module=null;armed=null;editing=null;render();break;
+    case'review':startSession('review',el.dataset.chapter?{chapterId:el.dataset.chapter}:el.dataset.module?{moduleId:el.dataset.module}:{});break;
+    case'cram':startSession('cram',{chapterId:el.dataset.chapter});break;
+    case'flip':reveal();break;
+    case'choose':choose(+el.dataset.i);break;
+    case'style':S.stats.style=el.dataset.v;putStats();render();break;
+    case'grade':grade(+el.dataset.g);break;
+    case'study-close':closeStudy();break;
+    case'npd':S.stats.newPerDay=Math.max(0,Math.min(200,(S.stats.newPerDay??20)+(+el.dataset.d)));putStats();render();break;
+    case'filter':filterType=el.dataset.t;render();break;
+    case'gen':{const c=S.chapters[el.dataset.id];if((c.cards||[]).length&&armed!=='regen'){armed='regen';render();disarmLater();break;}armed=null;queueGen(c.id);break;}
+    case'gen-missing':chaptersOf(nav.module).filter(c=>!(c.cards||[]).length).forEach(c=>queueGen(c.id));break;
+    case'add-to-module':S.draft={stage:'pick',moduleId:nav.module};tab='add';render();break;
+    case'edit':editing=el.dataset.id;render();break;
+    case'cancel-edit':editing=null;render();break;
+    case'save-edit':{const c=S.chapters[nav.chapter];const k=c.cards.find(z=>z.id===el.dataset.id);const box=el.closest('.cl');for(const f of['label','front','back','hint'])k[f]=box.querySelector(`[data-edit="${f}"]`).value;editing=null;putChapter(c);render();toast('Card saved');break;}
+    case'del-card':{const id=el.dataset.id;if(armed!=='card:'+id){armed='card:'+id;render();disarmLater();break;}const c=S.chapters[nav.chapter];c.cards=c.cards.filter(z=>z.id!==id);armed=null;putChapter(c);render();break;}
+    case'del-chapter':if(armed!=='del-chapter'){armed='del-chapter';render();disarmLater();break;}armed=null;delChapter(nav.chapter);nav.chapter=null;render();toast('Chapter deleted');break;
+    case'del-module':if(armed!=='del-module'){armed='del-module';render();disarmLater();break;}armed=null;delModule(nav.module);nav={module:null,chapter:null};render();toast('Module deleted');break;
+    case'dr-del':S.draft.chapters.splice(+el.dataset.i,1);render();break;
+    case'dr-add':{const d=S.draft,last=d.chapters[d.chapters.length-1];const s=last?Math.min(d.pages.length,last.end+1):1;d.chapters.push({title:'New chapter',start:s,end:d.pages.length});render();break;}
+    case'dr-detect':{const d=S.draft;d.stage='working';d.msg='Finding the chapters\u2026';d.progress=1;render();runDetect(d).then(()=>{d.stage='review';render();});break;}
+    case'dr-save':saveDraft();break;
+    case'dr-reset':S.draft=null;render();break;
+  }
+});
+document.addEventListener('change',e=>{
+  const el=e.target,b=el.dataset.bind;if(!b)return;
+  if(b==='draft-file'){const f=el.files&&el.files[0];if(f)onFile(f);return;}
+  if(b==='draft-module'){S.draft={stage:'pick',moduleId:el.value||null,name:el.value?'':(S.draft&&S.draft.name)||''};render();return;}
+  if(b==='rename-module'){const m=S.modules[nav.module];const v=el.value.trim();if(m&&v&&v!==m.name){m.name=v;putModule(m);}return;}
+  if(b==='rename-chapter'){const c=S.chapters[nav.chapter];const v=el.value.trim();if(c&&v&&v!==c.title){c.title=v;putChapter(c);}return;}
+  if(b==='api-key'||b==='api-model'){try{const k=b==='api-key'?API_KEY:API_MODEL;const v=el.value.trim();v?localStorage.setItem(k,v):localStorage.removeItem(k);}catch(err){}SAMPLE=apiSample();render();toast(b==='api-key'?(SAMPLE?'API key saved':'API key removed'):'Model saved');return;}
+  if(b==='dr-start'||b==='dr-end'){const c=S.draft.chapters[+el.dataset.i];c[b==='dr-start'?'start':'end']=parseInt(el.value)||1;render();}
+});
+document.addEventListener('input',e=>{
+  const el=e.target,b=el.dataset.bind;if(!b)return;
+  if(b==='draft-name')(S.draft||(S.draft={stage:'pick'})).name=el.value;
+  if(b==='dr-title')S.draft.chapters[+el.dataset.i].title=el.value;
+});
+document.addEventListener('keydown',e=>{
+  if(!sess||e.target.matches('input,textarea'))return;
+  if(sess.choices){
+    if(!sess.shown&&/^[1-4]$/.test(e.key))choose(+e.key-1);
+    else if(sess.shown&&(e.key===' '||e.key==='Enter')){e.preventDefault();grade(sess.choices[sess.picked].ok?2:0);}
+  }
+  else if(e.key===' '||e.key==='Enter'){e.preventDefault();sess.shown?grade(2):reveal();}
+  else if(sess.shown&&/^[1-4]$/.test(e.key)){const g=+e.key-1;grade(sess.mode==='cram'?(g===0?0:2):g);}
+  else if(e.key==='Escape')closeStudy();
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSoon();});
+
+render();initRuntime();
+</script>
+</body>
+</html>
