@@ -154,6 +154,18 @@ textarea.input{min-height:90px;resize:vertical;font-family:var(--serif)}
 .index .reveal-note{position:absolute;left:0;right:0;bottom:calc(var(--lh) * 2);text-align:center;color:var(--soft);font-size:.9rem;pointer-events:none}
 .index .src{font-size:.78rem;color:var(--soft);margin-top:10px}
 .reveal{animation:ink .28s ease-out}
+.pick-note{font-size:.85rem;color:var(--soft);margin:-4px 0 12px}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:block;width:100%;text-align:left;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card);font:1.02rem/1.55 var(--serif);white-space:pre-wrap;overflow-x:auto;color:var(--ink)}
+.choice:hover{border-color:var(--soft)}
+.choice[disabled]{cursor:default;opacity:.55}
+.choice.right{opacity:1;border-color:var(--good);box-shadow:inset 0 0 0 1.5px var(--good)}
+.choice.wrong{opacity:1;border-color:var(--again);box-shadow:inset 0 0 0 1.5px var(--again)}
+.choice .verdict{display:block;font:700 .8rem/1.4 var(--ui);margin-bottom:4px}
+.choice .verdict[hidden]{display:none}
+.choice.right .verdict{color:var(--good)}
+.choice.wrong .verdict{color:var(--again)}
+.modebadge{font-weight:500;color:var(--soft)}
 @keyframes ink{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .grades{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 16px 14px;max-width:640px;width:100%;margin:0 auto}
 .grades.two{grid-template-columns:1fr 1fr}
@@ -351,6 +363,31 @@ function nextSr(sr,g){
 function fmtIv(n){if(n<=0)return'today';if(n===1)return'1 day';if(n<31)return n+' days';if(n<365)return Math.round(n/30)+' mo';return(n/365).toFixed(1)+' yr';}
 function fmtDue(d){const n=d-today();return n<=0?'today':n===1?'tomorrow':'in '+fmtIv(n);}
 
+/* ---------- multiple choice ---------- */
+const GRADUATE=2;
+const styleSetting=()=>S.stats.style||'auto';
+function isLearning(k){return !(k.sr&&k.sr.reps>=GRADUATE);}
+function wantsChoices(k){const s=styleSetting();if(s==='flip')return false;if(s==='mc')return true;return isLearning(k);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const kindOf=t=>['theorem','lemma','proposition','corollary'].includes(t)?'thm':t==='definition'?'def':'eq';
+function buildChoices(c,k){
+  const norm=s=>String(s||'').replace(/\s+/g,' ').trim();
+  const seen=new Set([norm(k.back)]);const picked=[];
+  const modCards=chaptersOf(c.moduleId).flatMap(ch=>ch.cards||[]);
+  const same=x=>kindOf(x.type)===kindOf(k.type);
+  const pools=[(c.cards||[]).filter(same),modCards.filter(same),c.cards||[],modCards];
+  for(const pool of pools){
+    for(const x of shuffle(pool.slice())){
+      if(picked.length>=3)break;
+      const b=norm(x.back);if(x.id===k.id||!b||seen.has(b))continue;
+      seen.add(b);picked.push(x.back);
+    }
+    if(picked.length>=3)break;
+  }
+  if(picked.length<3)return null;
+  return shuffle([{t:k.back,ok:true},...picked.map(t=>({t,ok:false}))]);
+}
+
 /* ---------- UI state ---------- */
 let tab='today',nav={module:null,chapter:null},filterType='all',editing=null,armed=null;
 function setTabAttrs(){document.querySelectorAll('.tabs button').forEach(b=>{if(b.dataset.tab===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});}
@@ -398,6 +435,9 @@ function viewToday(){
   <div class="section"><h3>New cards per day</h3>
     <div class="row" style="justify-content:space-between"><span class="muted small">How many unseen cards join each day\u2019s review.</span>
     <div class="stepper"><button data-act="npd" data-d="-5" aria-label="Fewer">\u2212</button><span>${S.stats.newPerDay??20}</span><button data-act="npd" data-d="5" aria-label="More">+</button></div></div></div>
+  <div class="section"><h3>How cards are shown</h3>
+    <div class="chips" role="group" aria-label="How cards are shown">${[['auto','Automatic'],['mc','Always multiple choice'],['flip','Always classic']].map(([v,l])=>`<button class="chip" data-act="style" data-v="${v}" aria-pressed="${styleSetting()===v}">${l}</button>`).join('')}</div>
+    <p class="note">${{auto:`Cards start as multiple choice. Once you get a card right on ${GRADUATE} reviews in a row it becomes a classic flashcard, and it goes back to multiple choice if you miss it.`,mc:'Every card shows four answers to choose from.',flip:'Every card is a classic flashcard: recall the answer, then reveal it and rate yourself.'}[styleSetting()]}</p></div>
   ${viewSettings()}`;
 }
 function viewModules(){
@@ -443,7 +483,7 @@ function viewChapter(){
       <textarea class="input" data-edit="back" aria-label="Answer" style="min-height:140px">${esc(k.back)}</textarea>
       <textarea class="input" data-edit="hint" aria-label="Hint">${esc(k.hint||'')}</textarea>
       <div class="row"><button class="btn primary" data-act="save-edit" data-id="${k.id}">Save card</button><button class="btn quiet" data-act="cancel-edit">Cancel</button></div></div></li>`
-    :`<li class="cl"><div class="lab"><span>${esc(k.label||cap(k.type))}</span><span>${k.sr?'next '+esc(fmtDue(k.sr.due)):'unseen'}</span></div>
+    :`<li class="cl"><div class="lab"><span>${esc(k.label||cap(k.type))}</span><span>${!k.sr?'unseen':(styleSetting()==='auto'&&isLearning(k)?'learning, due ':'due ')+esc(fmtDue(k.sr.due))}</span></div>
       <div class="f">${esc(k.front)}</div><div class="b">${esc(k.back)}</div>
       ${k.hint?`<div class="b muted" style="margin-top:6px;font-style:italic">${esc(k.hint)}</div>`:''}
       <div class="acts"><button class="link" data-act="edit" data-id="${k.id}">Edit</button><button class="link" data-act="del-card" data-id="${k.id}">${armed==='card:'+k.id?'Tap again to delete':'Delete'}</button></div></li>`).join('');
@@ -675,9 +715,22 @@ function showCard(){
   }
   const it=sess.items[sess.i];const[c,k]=findCard(it);
   if(!k){sess.i++;return showCard();}
-  sess.shown=false;
+  sess.shown=false;sess.choices=null;sess.picked=null;
   $('#sbar').style.width=Math.round(sess.i/sess.items.length*100)+'%';
   $('#scount').textContent=`${sess.i+1} / ${sess.items.length}`;
+  const opts=wantsChoices(k)?buildChoices(c,k):null;
+  if(opts){
+    sess.choices=opts;
+    wrap.innerHTML=`<article class="index" style="cursor:default">
+    <div class="meta"><span class="type">${esc(cap(k.type))} <span class="modebadge">multiple choice</span></span><span>${esc(k.label)}</span></div>
+    <div class="q">${esc(k.front)}</div>
+    <p class="pick-note">Choose the correct answer.</p>
+    <div class="choices">${opts.map((o,i)=>`<button class="choice" data-act="choose" data-i="${i}"><span class="verdict" hidden></span><span class="ctext">${esc(o.t)}</span></button>`).join('')}</div>
+    <div class="hint" id="hint" hidden>${esc(k.hint||'')}</div>
+    <div class="src" id="src" hidden>${esc(c.title)}${k.page?`, p.${k.page}`:''}</div></article>`;
+    wrap.scrollTop=0;typeset(wrap);
+    g.className='grades two';g.innerHTML='';return;
+  }
   wrap.innerHTML=`<article class="index" data-act="flip" aria-label="Flashcard. Tap to show the answer.">
     <div class="meta"><span class="type">${esc(cap(k.type))}</span><span>${esc(k.label)}</span></div>
     <div class="q">${esc(k.front)}</div>
@@ -695,6 +748,25 @@ function reveal(){
   const g=$('#grades');const[,k]=findCard(sess.items[sess.i]);
   if(sess.mode==='cram'){g.className='grades two';g.innerHTML=`<button class="g0" data-act="grade" data-g="0">Again<small>see it again</small></button><button class="g2" data-act="grade" data-g="2">Got it<small>next card</small></button>`;}
   else{g.className='grades';g.innerHTML=['Again','Hard','Good','Easy'].map((n,i)=>`<button class="g${i}" data-act="grade" data-g="${i}">${n}<small>${fmtIv(nextSr(k.sr,i).interval)}</small></button>`).join('');}
+}
+function choose(i){
+  if(!sess||sess.shown||!sess.choices)return;
+  sess.shown=true;sess.picked=i;
+  const ok=sess.choices[i].ok;
+  document.querySelectorAll('.choice').forEach((b,j)=>{
+    b.disabled=true;const o=sess.choices[j];const v=b.querySelector('.verdict');
+    if(o.ok){b.classList.add('right');v.hidden=false;v.textContent=j===i?'Correct':'Correct answer';}
+    else if(j===i){b.classList.add('wrong');v.hidden=false;v.textContent='Your answer';}
+  });
+  const h=$('#hint');if(h.textContent.trim())h.hidden=false;$('#src').hidden=false;
+  if(!ok){const r=document.querySelector('.choice.right');if(r)r.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+  const[,k]=findCard(sess.items[sess.i]);
+  const g=$('#grades');g.className='grades two';
+  let sub='';
+  if(sess.mode==='review'){const nx=nextSr(k.sr,ok?2:0);sub=ok?(styleSetting()==='auto'&&nx.reps>=GRADUATE?`Next time as a flashcard, in ${fmtIv(nx.interval)}`:`Due again in ${fmtIv(nx.interval)}`):'You\u2019ll see this again today';}
+  else sub=ok?'Next card':'You\u2019ll see this again';
+  g.innerHTML=`<button class="wide" data-act="grade" data-g="${ok?2:0}">Continue<small style="color:inherit;opacity:.8">${sub}</small></button>`;
+  const btn=g.querySelector('button');if(btn)btn.focus({preventScroll:true});
 }
 function grade(gv){
   if(!sess||!sess.shown)return;
@@ -755,6 +827,8 @@ document.addEventListener('click',e=>{
     case'review':startSession('review',el.dataset.chapter?{chapterId:el.dataset.chapter}:el.dataset.module?{moduleId:el.dataset.module}:{});break;
     case'cram':startSession('cram',{chapterId:el.dataset.chapter});break;
     case'flip':reveal();break;
+    case'choose':choose(+el.dataset.i);break;
+    case'style':S.stats.style=el.dataset.v;putStats();render();break;
     case'grade':grade(+el.dataset.g);break;
     case'study-close':closeStudy();break;
     case'npd':S.stats.newPerDay=Math.max(0,Math.min(200,(S.stats.newPerDay??20)+(+el.dataset.d)));putStats();render();break;
@@ -791,7 +865,11 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('keydown',e=>{
   if(!sess||e.target.matches('input,textarea'))return;
-  if(e.key===' '||e.key==='Enter'){e.preventDefault();sess.shown?grade(2):reveal();}
+  if(sess.choices){
+    if(!sess.shown&&/^[1-4]$/.test(e.key))choose(+e.key-1);
+    else if(sess.shown&&(e.key===' '||e.key==='Enter')){e.preventDefault();grade(sess.choices[sess.picked].ok?2:0);}
+  }
+  else if(e.key===' '||e.key==='Enter'){e.preventDefault();sess.shown?grade(2):reveal();}
   else if(sess.shown&&/^[1-4]$/.test(e.key)){const g=+e.key-1;grade(sess.mode==='cram'?(g===0?0:2):g);}
   else if(e.key==='Escape')closeStudy();
 });
